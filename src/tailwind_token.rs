@@ -1,6 +1,6 @@
 // use std::fmt::Format;
 use lightningcss::{
-    stylesheet::{ParserOptions, PrinterOption},
+    stylesheet::{ParserOptions, PrinterOptions},
     traits::ToCss,
     values::color::{self, CssColor},
 };
@@ -10,7 +10,9 @@ pub static mut TAILWIND_GERENAL_TOKEN: Vec<GerenalToken> = Vec::new();
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TailwindTokenSet {
-    pub classnames: Vec<String>,
+    is_based: bool,
+    // involved class
+    pub involved_classnames: Vec<String>,
     pub tailwind_token: Vec<String>,
     pub layer_group: String,
     pub media_query: Vec<String>,
@@ -19,7 +21,8 @@ pub struct TailwindTokenSet {
 impl TailwindTokenSet {
     pub fn new() -> TailwindTokenSet {
         TailwindTokenSet {
-            classnames: vec![],
+            is_based: false,
+            involved_classnames: vec![],
             tailwind_token: vec![],
             layer_group: "".to_owned(),
             media_query: Vec::new(),
@@ -30,12 +33,12 @@ impl TailwindTokenSet {
     pub fn set_layer_group(&mut self, income_str: String) {
         self.layer_group = income_str;
     }
-    pub fn push_classname(&mut self, income_str: String) {
-        self.classnames.push(income_str);
+    pub fn push_involved_classname(&mut self, income_str: String) {
+        self.involved_classnames.push(income_str);
     }
-    pub fn push_classnames(&mut self, income_arr: Vec<&str>) {
+    pub fn push_involved_classnames(&mut self, income_arr: Vec<&str>) {
         for t in income_arr {
-            self.classnames.push(t.to_owned());
+            self.involved_classnames.push(t.to_owned());
         }
     }
 
@@ -48,8 +51,15 @@ impl TailwindTokenSet {
         }
     }
     pub fn push_tailwind_token<F: ToString>(&mut self, property_name: &str, property_value: F) {
-        self.tailwind_token
-            .push(format!("{}-{}", property_name, property_value.to_string()));
+        if property_name != "" {
+            self.tailwind_token
+                .push(format!("{}-{}", property_name, property_value.to_string()));
+        } else {
+            self.tailwind_token.push(property_value.to_string());
+        }
+    }
+    pub fn set_raw_property(&mut self, income_str: String) {
+        self.raw_property = income_str;
     }
 
     pub fn export_token() -> Vec<String> {
@@ -97,7 +107,9 @@ impl ColorToken {
         self.token_value.eq(input_st)
     }
     fn similar_token(&self, input_color: &color::CssColor) -> bool {
-        let income_rgb = input_color.to_css_string(PrinterOption::default()).unwrap();
+        let income_rgb = input_color
+            .to_css_string(PrinterOptions::default())
+            .unwrap();
         // income_rgb.
         return false;
     }
