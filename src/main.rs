@@ -1,7 +1,7 @@
 mod convert_token;
 mod tailwind_token;
 use crate::convert_token::resolve_style;
-use crate::tailwind_token::TailwindTokenSet;
+use crate::tailwind_token::{init, TailwindTokenSet};
 use lightningcss::{
     properties::Property,
     rules::{style::StyleRule, CssRule},
@@ -16,7 +16,8 @@ use lightningcss::{
 use serde_json;
 use std::{fs, path::Path};
 fn main() {
-    let mut income_src = Path::new("./input-src/button.css");
+    tailwind_token::init();
+    let mut income_src = Path::new("./input-src/cdt-navbar.css");
     read_css_file(income_src);
 }
 
@@ -33,9 +34,77 @@ fn read_css_file(file_path: &Path) {
         tw_set.set_layer_group(file_path.to_str().unwrap().to_string());
         tw_set.set_raw_property(rule.to_css_string(PrinterOptions::default()).unwrap());
         match rule {
-            // CssRule::Media(p) => {}
+            CssRule::Media(_) => {
+                // p.query.
+                // for q in p.query.media_queries {
+                //     match q.condition.unwrap() {
+                //         lightningcss::media_query::MediaCondition::Feature(ss) => {
+                //             println!(
+                //                 "Feature: {}",
+                //                 ss.to_css_string(PrinterOptions::default()).unwrap()
+                //             );
+
+                //             match ss {
+                //                 lightningcss::media_query::MediaFeature::Plain { name, value } => {
+                //                     println!(
+                //                         "Plain: {} --- {}",
+                //                         name,
+                //                         value.to_css_string(PrinterOptions::default()).unwrap()
+                //                     );
+
+                //                     match value{
+                //                         lightningcss::media_query::MediaFeatureValue::Length(qwe) => {},
+                //                         lightningcss::media_query::MediaFeatureValue::Number(_) => {},
+                //                         lightningcss::media_query::MediaFeatureValue::Resolution(_) => {},
+                //                         lightningcss::media_query::MediaFeatureValue::Ratio(_) => {},
+                //                         lightningcss::media_query::MediaFeatureValue::Ident(_) => {},
+                //                     }
+                //                 }
+                //                 lightningcss::media_query::MediaFeature::Boolean(_) => {}
+                //                 lightningcss::media_query::MediaFeature::Range {
+                //                     name,
+                //                     operator,
+                //                     value,
+                //                 } => {
+                //                     println!(
+                //                         "Range: {} -- {} --- {}",
+                //                         name,
+                //                         operator.to_css_string(PrinterOptions::default()).unwrap(),
+                //                         value.to_css_string(PrinterOptions::default()).unwrap()
+                //                     );
+                //                 }
+                //                 lightningcss::media_query::MediaFeature::Interval {
+                //                     name,
+                //                     start,
+                //                     start_operator,
+                //                     end,
+                //                     end_operator,
+                //                 } => {}
+                //             }
+                //         }
+                //         lightningcss::media_query::MediaCondition::Not(_) => {}
+                //         lightningcss::media_query::MediaCondition::Operation(_, _) => {}
+                //         lightningcss::media_query::MediaCondition::InParens(_) => {}
+                //     }
+                //     if let Some(qualifier) = q.qualifier {
+                //         println!(
+                //             "qualifier: {}",
+                //             qualifier.to_css_string(PrinterOptions::default()).unwrap()
+                //         );
+                //     }
+
+                //     // match q.media_type {
+                //     //     lightningcss::media_query::MediaType::All => {
+                //     //     }
+                //     //     lightningcss::media_query::MediaType::Print => {},
+                //     //     lightningcss::media_query::MediaType::Screen => {},
+                //     //     lightningcss::media_query::MediaType::Custom(_) => {},
+                //     // }
+                //     // println!("media_type : {}" , q.media_type);
+                // }
+            }
             CssRule::Style(p) => {
-                println!("selectors : {}", p.selectors);
+                // println!("selectors : {}", p.selectors);
                 resolve_style(&p, &mut tw_set);
             }
             // CssRule::Import(_) => todo!(),
@@ -62,5 +131,5 @@ fn read_css_file(file_path: &Path) {
         tw_vec.push(tw_set);
     }
 
-    println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
+    // println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
 }

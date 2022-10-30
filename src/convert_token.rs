@@ -9,18 +9,19 @@ use lightningcss::{
     traits::ToCss,
     values::{
         calc::Calc,
+        color::CssColor,
         length::{LengthPercentage, LengthPercentageOrAuto, LengthValue},
         percentage::{DimensionPercentage, Percentage},
     },
 };
 
-use crate::tailwind_token::TailwindTokenSet;
+use crate::tailwind_token::{ColorToken, TailwindTokenSet};
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
     for prop in &rule.declarations.declarations {
         // prop.value_to_css_string(PrinterOptions::default());
         match prop {
-            // Property::BackgroundColor(_) => todo!(),
+            Property::BackgroundColor(p) => resolve_color(p, tw_set, "bg"),
             // Property::BackgroundImage(_) => todo!(),
             // Property::BackgroundPositionX(_) => todo!(),
             // Property::BackgroundPositionY(_) => todo!(),
@@ -30,10 +31,14 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::BackgroundAttachment(_) => todo!(),
             // Property::BackgroundClip(_, _) => todo!(),
             Property::BackgroundOrigin(p) => resolve_keyword(p, tw_set, "bg-origin"),
-            // Property::Background(_) => todo!(),
+            Property::Background(p) => {
+                for s in p {
+                    resolve_color(&s.color, tw_set, "bg");
+                }
+            }
             // Property::BoxShadow(_, _) => todo!(),
             Property::Opacity(p) => resolve_keyword(p, tw_set, "opacity"),
-            // Property::Color(_) => todo!(),
+            Property::Color(p) => resolve_color(p, tw_set, "text"),
             Property::Display(p) => match *p {
                 lightningcss::properties::display::Display::Keyword(a) => match a {
                     lightningcss::properties::display::DisplayKeyword::None => {
@@ -486,7 +491,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
 
             Property::FontWeight(p) => resolve_keyword(p, tw_set, "font"),
-            // Property::FontSize(_) => todo!(),
+            // Property::FontSize(p) => todo!(),
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
             Property::FontStyle(p) => match p {
@@ -558,7 +563,12 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::BoxDecorationBreak(_, _) => todo!(),
             // Property::Resize(_) => todo!(),
             Property::Cursor(p) => resolve_keyword(p, tw_set, "cursor"),
-            // Property::CaretColor(_) => todo!(),
+            Property::CaretColor(p) => match p {
+                lightningcss::properties::ui::ColorOrAuto::Auto => todo!(),
+                lightningcss::properties::ui::ColorOrAuto::Color(a) => {
+                    // let sa = a.to_css_string(PrinterOptions::default()).unwrap();
+                }
+            },
             // Property::CaretShape(_) => todo!(),
             // Property::Caret(_) => todo!(),
             Property::UserSelect(p, _) => resolve_keyword(p, tw_set, "select"),
@@ -809,4 +819,24 @@ fn resolve_border_side_width(
         },
         _ => resolve_keyword(income_value, tw_set, token_prefix),
     }
+}
+
+fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+    let mut red = 0u8;
+    let mut green = 0u8;
+    let mut blue = 0u8;
+    let mut alpha = 1u8;
+    // } ;
+
+    if let CssColor::RGBA(pp) = income_value.to_rgb() {
+        red = pp.red;
+        green = pp.green;
+        blue = pp.blue;
+        alpha = pp.alpha;
+    };
+
+    println!(
+        "[{}] :: r:{}, g:{}, b:{}, a:{}  ",
+        token_prefix, red, green, blue, alpha
+    );
 }
