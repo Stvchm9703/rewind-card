@@ -8,6 +8,7 @@ use lightningcss::{
     traits::ToCss,
     values::color::CssColor,
     values::length::{Length, LengthValue},
+    values::percentage::DimensionPercentage,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -26,25 +27,27 @@ pub struct TailwindTokenSet {
     pub tailwind_token: Vec<String>,
     pub layer_group: String,
     pub media_query: Vec<String>,
+    pub media_qurey_prefix: Vec<String>,
     pub raw_property: String,
 }
 impl TailwindTokenSet {
     pub fn new() -> TailwindTokenSet {
         TailwindTokenSet {
             is_based: false,
-            involved_classnames: vec![],
-            tailwind_token: vec![],
-            layer_group: "".to_owned(),
+            involved_classnames: Vec::new(),
+            tailwind_token: Vec::new(),
+            layer_group: String::new(),
             media_query: Vec::new(),
-            raw_property: "".to_owned(),
+            media_qurey_prefix: Vec::new(),
+            raw_property: String::new(),
         }
     }
 
-    pub fn set_layer_group(&mut self, income_str: String) {
-        self.layer_group = income_str;
+    pub fn set_layer_group(&mut self, income_str: &str) {
+        self.layer_group = income_str.to_string();
     }
-    pub fn push_involved_classname(&mut self, income_str: String) {
-        self.involved_classnames.push(income_str);
+    pub fn push_involved_classname(&mut self, income_str: &str) {
+        self.involved_classnames.push(income_str.to_owned());
     }
     pub fn push_involved_classnames(&mut self, income_arr: Vec<&str>) {
         for t in income_arr {
@@ -68,8 +71,8 @@ impl TailwindTokenSet {
             self.tailwind_token.push(property_value.to_string());
         }
     }
-    pub fn set_raw_property(&mut self, income_str: String) {
-        self.raw_property = income_str;
+    pub fn set_raw_property(&mut self, income_str: &str) {
+        self.raw_property = income_str.to_owned();
     }
 
     pub fn export_token() -> Vec<String> {
@@ -277,7 +280,7 @@ pub fn init() {
             } else if unit == "px" {
                 max_width_value = Length::Value(LengthValue::Px(num));
             }
-            token_set.min_width = Some(max_width_value);
+            token_set.max_width = Some(max_width_value);
         }
 
         unsafe {
@@ -286,19 +289,18 @@ pub fn init() {
     }
     // let mut leng_st = Length::Value(lightningcss::values::length::LengthValue::Rem(1f32));
     // unsafe {
-    //     println!(
-    //         "color-token : {}",
-    //         serde_json::to_string(&TAILWIND_COLOR_TOKEN).unwrap()
-    //     );
-    //     println!(
-    //         "typography-token : {}",
-    //         serde_json::to_string(&TAILWIND_TYPOGRAPHY_TOKEN).unwrap()
-    //     );
-
-    //       println!(
-    //         "media-token : {}",
-    //         serde_json::to_string(&TAILWIND_MEDIA_LAYOUT_TOKEN).unwrap()
-    //     );
+    // println!(
+    //     "color-token : {}",
+    //     serde_json::to_string(&TAILWIND_COLOR_TOKEN).unwrap()
+    // );
+    // println!(
+    //     "typography-token : {}",
+    //     serde_json::to_string(&TAILWIND_TYPOGRAPHY_TOKEN).unwrap()
+    // );
+    // println!(
+    //     "media-token : {}",
+    //     serde_json::to_string(&TAILWIND_MEDIA_LAYOUT_TOKEN).unwrap()
+    // );
     // }
 }
 
@@ -339,4 +341,71 @@ pub fn search_color(r: &u8, g: &u8, b: &u8) -> Vec<String> {
     }
 
     return return_set;
+}
+
+fn in_range_media_query(arange: &f32, income_val: &f32) -> bool {
+    let mut lower_val = arange.to_owned();
+    let mut upper_val: f32 = arange.to_owned();
+    if lower_val == 1f32 {
+        lower_val = 0f32;
+    } else if lower_val != 0f32 {
+        lower_val -= 2f32;
+    }
+    upper_val += 2f32;
+    return (income_val >= &lower_val) && (income_val <= &upper_val);
+}
+pub fn search_media(name: &str, value: &f32) -> Vec<String> {
+    let mut token: Vec<String> = Vec::new();
+    unsafe {
+        for media_set in &TAILWIND_MEDIA_LAYOUT_TOKEN {
+            // println!("in view :  {}, ", serde_json::to_string(media_set).unwrap());
+            if name.to_lowercase() == "min-width" && media_set.min_width.is_some() {
+                let value_length = media_set.min_width.to_owned().unwrap();
+                if let Length::Value(d) = value_length {
+                    let (ss, _) = d.to_unit_value();
+                    if in_range_media_query(&ss, value) {
+                        // println!( "{} ,  {}, ", name, serde_json::to_string(media_set).unwrap() );
+                        // println!("in min-width : {}", ss);
+                        token.push(media_set.token_name.to_owned());
+                    }
+                }
+            } else if name.to_lowercase() == "max-width" && media_set.max_width.is_some() {
+                let value_length = media_set.max_width.to_owned().unwrap();
+                if let Length::Value(d) = value_length {
+                    let (ss, _) = d.to_unit_value();
+                    if in_range_media_query(&ss, value) {
+                        // println!( "{} ,  {}, ", name, serde_json::to_string(media_set).unwrap() );
+                        // println!("in max-width : {}", ss);
+                        token.push(media_set.token_name.to_owned());
+                    }
+                }
+            }
+        }
+    }
+    return token;
+}
+
+pub fn search_font(income_value: &f32) -> Vec<String> {
+    let mut token: Vec<String> = Vec::new();
+
+    unsafe {
+        for media_set in &TAILWIND_TYPOGRAPHY_TOKEN {
+            if let FontSize::Length(s) = &media_set.font_size_set {
+                if let DimensionPercentage::Dimension(d) = s {
+                    let mut rem_value = 0f32;
+                    let (value, unit) = d.to_unit_value();
+                    if unit.to_lowercase().contains("em") {
+                        rem_value = value;
+                    } else if d.to_px().is_some() {
+                        let u = d.to_px().unwrap_or_default();
+                        rem_value = (u / 16f32).round();
+                    }
+                    if in_range_media_query(&rem_value, income_value) {
+                        token.push(media_set.token_name.to_owned());
+                    }
+                }
+            }
+        }
+    }
+    return token;
 }

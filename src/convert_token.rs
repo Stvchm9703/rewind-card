@@ -1,24 +1,38 @@
 use lightningcss::{
     properties::{
-        border::BorderSideWidth,
         effects::Filter,
-        size::{BoxSizing, MaxSize, Size},
         Property,
+        grid,
+        font,
+        transform,
+        effects,
     },
-    rules::{style::StyleRule, CssRule},
-    stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
-    traits::ToCss,
     values::{
-        calc::Calc,
-        color::CssColor,
-        length::{LengthPercentage, LengthPercentageOrAuto, LengthValue},
-        percentage::{DimensionPercentage, NumberOrPercentage, Percentage},
-        time::Time,
+        easing,
     },
+    rules::{style::StyleRule },
+    stylesheet::{ PrinterOptions},
+    traits::ToCss,
+   
 };
-use regex::Regex;
+// use regex::Regex;
 
-use crate::tailwind_token::{search_color, ColorToken, TailwindTokenSet};
+use crate::tailwind_token::{ TailwindTokenSet};
+
+use crate::resolve_token::{
+    resolve_track_size, 
+    resolve_length_length_percentage_or_auto,
+    resolve_dimension,
+    resolve_length_size,
+    resolve_length_max_size,
+    resolve_keyword,
+    resolve_border_side_width,
+    resolve_color,
+    resolve_percentage_or_number,
+    resolve_time,
+    resolve_raw_exp,
+    resovle_font_set,
+};
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
     for prop in &rule.declarations.declarations {
@@ -378,18 +392,18 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::FlexPreferredSize(_, _) => todo!(),
             // ====
             Property::GridTemplateColumns(p) => match p {
-                lightningcss::properties::grid::TrackSizing::None => {
+                grid::TrackSizing::None => {
                     resolve_keyword(p, tw_set, "grid-cols")
                 }
-                lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                grid::TrackSizing::TrackList(a) => {
                     resolve_raw_exp(a, tw_set, "grid-cols");
                 }
             },
             Property::GridTemplateRows(p) => match p {
-                lightningcss::properties::grid::TrackSizing::None => {
+                grid::TrackSizing::None => {
                     resolve_keyword(p, tw_set, "grid-rows")
                 }
-                lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                grid::TrackSizing::TrackList(a) => {
                     resolve_raw_exp(a, tw_set, "grid-rows");
                 }
             },
@@ -420,25 +434,25 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
 
                 match &p.columns {
-                    lightningcss::properties::grid::TrackSizing::None => {
+                    grid::TrackSizing::None => {
                         tw_set.push_tailwind_token("grid-cols", "none");
                     }
-                    lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                    grid::TrackSizing::TrackList(a) => {
                         resolve_raw_exp(a, tw_set, "grid-cols");
                     }
                 }
                 match &p.rows {
-                    lightningcss::properties::grid::TrackSizing::None => {
+                    grid::TrackSizing::None => {
                         tw_set.push_tailwind_token("grid-rows", "none");
                     }
-                    lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                    grid::TrackSizing::TrackList(a) => {
                         resolve_raw_exp(a, tw_set, "grid-rows");
                     }
                 }
             }
             Property::GridRowStart(p) => {
                 match p {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "grid-rows"),
@@ -447,7 +461,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
             Property::GridRowEnd(p) => {
                 match p {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "row-end"),
@@ -456,7 +470,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
             Property::GridColumnStart(p) => {
                 match p {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-start"),
@@ -465,7 +479,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
             Property::GridColumnEnd(p) => {
                 match p {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-end"),
@@ -474,13 +488,13 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
             Property::GridRow(p) => {
                 match &p.start {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "row-start"),
                 }
                 match &p.end {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "row-end"),
@@ -488,13 +502,13 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
             Property::GridColumn(p) => {
                 match &p.start {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-start"),
                 }
                 match &p.end {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-end"),
@@ -512,26 +526,26 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
 
                 match &p.row_start {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "row-start"),
                 }
                 match &p.row_end {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("row-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "row-end"),
                 }
 
                 match &p.column_start {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-start", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-start"),
                 }
                 match &p.column_end {
-                    lightningcss::properties::grid::GridLine::Auto => {
+                    grid::GridLine::Auto => {
                         tw_set.push_tailwind_token("col-end", "auto")
                     }
                     s => resolve_raw_exp(s, tw_set, "col-end"),
@@ -685,8 +699,8 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
 
             Property::FontWeight(p) => {
                 match p {
-                    lightningcss::properties::font::FontWeight::Absolute(a) => match a {
-                        lightningcss::properties::font::AbsoluteFontWeight::Weight(k) => {
+                    font::FontWeight::Absolute(a) => match a {
+                        font::AbsoluteFontWeight::Weight(k) => {
                             if k <= &200f32 {
                                 tw_set.push_tailwind_token("font", "extralight");
                             } else if k <= &300f32 {
@@ -703,31 +717,31 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                                 tw_set.push_tailwind_token("font", "extrabold");
                             }
                         }
-                        lightningcss::properties::font::AbsoluteFontWeight::Normal => {
+                        font::AbsoluteFontWeight::Normal => {
                             tw_set.push_tailwind_token("font", "normal")
                         }
-                        lightningcss::properties::font::AbsoluteFontWeight::Bold => {
+                        font::AbsoluteFontWeight::Bold => {
                             tw_set.push_tailwind_token("font", "bold")
                         }
                     },
-                    lightningcss::properties::font::FontWeight::Bolder => {
+                    font::FontWeight::Bolder => {
                         tw_set.push_tailwind_token("font", "medium")
                     }
-                    lightningcss::properties::font::FontWeight::Lighter => {
+                    font::FontWeight::Lighter => {
                         tw_set.push_tailwind_token("font", "light");
                     }
                 }
                 // resolve_keyword(p, tw_set, "font")
             }
-            // Property::FontSize(p) => todo!(),
+            Property::FontSize(p) => {},
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
             Property::FontStyle(p) => match p {
-                lightningcss::properties::font::FontStyle::Normal => {}
+                font::FontStyle::Normal => {}
                 _ => resolve_keyword(p, tw_set, "font"),
             },
             // Property::FontVariantCaps(_) => todo!(),
-            // Property::LineHeight(_) => todo!(),
+            Property::LineHeight(p) => {},
             // Property::Font(_) => todo!(),
             // Property::VerticalAlign(_) => todo!(),
             // Property::FontPalette(_) => todo!(),
@@ -765,7 +779,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 for q in p {
                     // resolve_time(q, tw_set, "delay");
                     match *q {
-                        lightningcss::values::easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                        easing::EasingFunction::CubicBezier(a, b, c, d) => {
                             // /**
                             // standard: {
                             //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
@@ -804,17 +818,17 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             } 
                             
                         },
-                        lightningcss::values::easing::EasingFunction::Steps(_, _) => {},
-                        lightningcss::values::easing::EasingFunction::Linear => {
+                        easing::EasingFunction::Steps(_, _) => {},
+                        easing::EasingFunction::Linear => {
                             tw_set.push_tailwind_token("ease", "linear");
                         },
                         _ => {
                             resolve_keyword(q, tw_set, "");
                         }
-                        // lightningcss::values::easing::EasingFunction::Ease => todo!(),
-                        // lightningcss::values::easing::EasingFunction::EaseIn => todo!(),
-                        // lightningcss::values::easing::EasingFunction::EaseOut => todo!(),
-                        // lightningcss::values::easing::EasingFunction::EaseInOut => todo!(),
+                        // easing::EasingFunction::Ease => todo!(),
+                        // easing::EasingFunction::EaseIn => todo!(),
+                        // easing::EasingFunction::EaseOut => todo!(),
+                        // easing::EasingFunction::EaseInOut => todo!(),
                     }
                 }
             }
@@ -823,7 +837,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                     resolve_time(&q.delay, tw_set, "delay");
                     resolve_time(&q.duration, tw_set, "duration");
                     match q.timing_function {
-                        lightningcss::values::easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                        easing::EasingFunction::CubicBezier(a, b, c, d) => {
                             // /**
                             // standard: {
                             //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
@@ -862,8 +876,8 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             } 
                             
                         },
-                        lightningcss::values::easing::EasingFunction::Steps(_, _) => {},
-                        lightningcss::values::easing::EasingFunction::Linear => {
+                        easing::EasingFunction::Steps(_, _) => {},
+                        easing::EasingFunction::Linear => {
                             tw_set.push_tailwind_token("ease", "linear");
                         },
                         _ => {
@@ -886,75 +900,75 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::Transform(p, _) => {
                 for q in &p.0{
                     match q {
-                        lightningcss::properties::transform::Transform::Translate(x, y) => {
+                        transform::Transform::Translate(x, y) => {
                             resolve_dimension(&x, tw_set, "translate-x");
                             resolve_dimension(&y, tw_set, "translate-y");
                         },
-                        lightningcss::properties::transform::Transform::TranslateX(x) => {
+                        transform::Transform::TranslateX(x) => {
                             resolve_dimension(&x, tw_set, "translate-x");
                         },
-                        lightningcss::properties::transform::Transform::TranslateY(y) => {
+                        transform::Transform::TranslateY(y) => {
                             resolve_dimension(&y, tw_set, "translate-y");
                         },
-                        lightningcss::properties::transform::Transform::TranslateZ(z) => {
+                        transform::Transform::TranslateZ(z) => {
                             resolve_keyword(&z, tw_set, "translate-z");
 
                         },
-                        lightningcss::properties::transform::Transform::Translate3d(x, y, z) => {
+                        transform::Transform::Translate3d(x, y, z) => {
                             resolve_dimension(&x, tw_set, "translate-x");
                             resolve_dimension(&y, tw_set, "translate-y");
                             resolve_keyword(&z, tw_set, "translate-z");
                         },
-                        lightningcss::properties::transform::Transform::Scale(x, y) => {
+                        transform::Transform::Scale(x, y) => {
                             resolve_percentage_or_number(&x, tw_set, "scale-x");
                             resolve_percentage_or_number(&y, tw_set, "scale-y");
                         },
-                        lightningcss::properties::transform::Transform::ScaleX(x) => {
+                        transform::Transform::ScaleX(x) => {
                             resolve_percentage_or_number(&x, tw_set, "scale-x");
                         },
-                        lightningcss::properties::transform::Transform::ScaleY(y) => {
+                        transform::Transform::ScaleY(y) => {
                             resolve_percentage_or_number(&y, tw_set, "scale-y");
                         },
-                        lightningcss::properties::transform::Transform::ScaleZ(z) => {
+                        transform::Transform::ScaleZ(z) => {
                             resolve_percentage_or_number(&z, tw_set, "scale-z");
 
                         },
-                        lightningcss::properties::transform::Transform::Scale3d(x, y, z) => {
+                        transform::Transform::Scale3d(x, y, z) => {
                             resolve_percentage_or_number(&x, tw_set, "scale-x");
                             resolve_percentage_or_number(&y, tw_set, "scale-y");
                             resolve_percentage_or_number(&z, tw_set, "scale-z");
                         },
-                        lightningcss::properties::transform::Transform::Rotate(x) => {
+                        transform::Transform::Rotate(x) => {
                             tw_set.push_tailwind_token("rotate", x.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::RotateX(x) => {
+                        transform::Transform::RotateX(x) => {
                             tw_set.push_tailwind_token("rotate-x", x.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::RotateY(x) => {
+                        transform::Transform::RotateY(x) => {
                             tw_set.push_tailwind_token("rotate-y", x.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::RotateZ(x) => {
+                        transform::Transform::RotateZ(x) => {
                             tw_set.push_tailwind_token("rotate-z", x.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::Rotate3d(x, y, z, _) => {
+                        transform::Transform::Rotate3d(x, y, z, _) => {
                             tw_set.push_tailwind_token("rotate-x", x.to_degrees());
                             tw_set.push_tailwind_token("rotate-y", y.to_degrees());
                             tw_set.push_tailwind_token("rotate-z", z.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::Skew(x, y) => {
+                        transform::Transform::Skew(x, y) => {
                             tw_set.push_tailwind_token("skew-x", x.to_degrees());
                             tw_set.push_tailwind_token("skew-y", y.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::SkewX(x) => {
+                        transform::Transform::SkewX(x) => {
                             tw_set.push_tailwind_token("skew-x", x.to_degrees());
                         },
-                        lightningcss::properties::transform::Transform::SkewY(y) => {
+                        transform::Transform::SkewY(y) => {
                             tw_set.push_tailwind_token("skew-y", y.to_degrees());
 
                         },
-                        // lightningcss::properties::transform::Transform::Perspective(_) => todo!(),
-                        // lightningcss::properties::transform::Transform::Matrix(_) => todo!(),
-                        // lightningcss::properties::transform::Transform::Matrix3d(_) => todo!(),
+                        // transform::Transform::Perspective(_) => todo!(),
+                        // transform::Transform::Matrix(_) => todo!(),
+                        // transform::Transform::Matrix3d(_) => todo!(),
                         _ => (),
                     }
                 }
@@ -1095,13 +1109,13 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::WebKitMaskBoxImageOutset(_, _) => todo!(),
             // Property::WebKitMaskBoxImageRepeat(_, _) => todo!(),
             Property::Filter(p, _) => match p {
-                lightningcss::properties::effects::FilterList::None => {
+                effects::FilterList::None => {
                     tw_set.push_tailwind_token("filter", "none")
                 }
-                lightningcss::properties::effects::FilterList::Filters(dd) => {
+                effects::FilterList::Filters(dd) => {
                     for aaa in dd {
                         match aaa {
-                            // lightningcss::properties::effects::Filter::Url(_) => {},
+                            // effects::Filter::Url(_) => {},
                             Filter::Blur(p) => resolve_keyword(p, tw_set, "filter-blur"),
                             Filter::Brightness(p) => {
                                 resolve_percentage_or_number(p, tw_set, "filter-brightness")
@@ -1133,13 +1147,13 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
             },
             Property::BackdropFilter(p, _) => match p {
-                lightningcss::properties::effects::FilterList::None => {
+                effects::FilterList::None => {
                     tw_set.push_tailwind_token("backdrop-filter", "none")
                 }
-                lightningcss::properties::effects::FilterList::Filters(dd) => {
+                effects::FilterList::Filters(dd) => {
                     for aaa in dd {
                         match aaa {
-                            // lightningcss::properties::effects::Filter::Url(_) => {},
+                            // effects::Filter::Url(_) => {},
                             Filter::Blur(p) => resolve_keyword(p, tw_set, "backdrop-filter-blur"),
                             Filter::Brightness(p) => resolve_percentage_or_number(
                                 p,
@@ -1185,284 +1199,3 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
     }
 }
 
-fn resolve_track_size(
-    income_value: &lightningcss::properties::grid::TrackSize,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match income_value {
-        lightningcss::properties::grid::TrackSize::TrackBreadth(k) => match k {
-            lightningcss::properties::grid::TrackBreadth::Flex(k) => {
-                tw_set.push_tailwind_token(token_prefix, k)
-            }
-            lightningcss::properties::grid::TrackBreadth::Length(k) => {
-                resolve_dimension(k, tw_set, token_prefix)
-            }
-            lightningcss::properties::grid::TrackBreadth::MinContent => {
-                tw_set.push_tailwind_token(token_prefix, "min");
-            }
-
-            lightningcss::properties::grid::TrackBreadth::MaxContent => {
-                tw_set.push_tailwind_token(token_prefix, "max");
-            }
-            lightningcss::properties::grid::TrackBreadth::Auto => {
-                tw_set.push_tailwind_token(token_prefix, "auto");
-            }
-        },
-        lightningcss::properties::grid::TrackSize::MinMax(_, _) => {
-            resolve_raw_exp(income_value, tw_set, token_prefix)
-        }
-        lightningcss::properties::grid::TrackSize::FitContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "[fit-content]");
-        }
-    }
-}
-
-fn resolve_length_length_percentage_or_auto(
-    income_value: &LengthPercentageOrAuto,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match income_value {
-        LengthPercentageOrAuto::Auto => {
-            tw_set.push_tailwind_token(token_prefix, "auto");
-        }
-        LengthPercentageOrAuto::LengthPercentage(a) => {
-            resolve_dimension(a, tw_set, token_prefix);
-        }
-    }
-}
-
-fn resolve_dimension(
-    length_value: &DimensionPercentage<LengthValue>,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match length_value {
-        LengthPercentage::Dimension(value) => {
-            let mut pxv = match value.to_px() {
-                Some(v) => {
-                    if v >= 24f32 {
-                        format!("{}", (v / 4f32).round())
-                    } else {
-                        format!("{}", v.round() / 4f32)
-                    }
-                }
-                None => String::from(""),
-            };
-
-            if pxv.eq("") {
-                let (vall, unit) = value.to_unit_value();
-                if unit.to_lowercase().contains("em") {
-                    pxv = format!("{}", (vall * 4f32).round());
-                } else {
-                    pxv = format!("{}{}", vall, unit)
-                }
-            }
-
-            tw_set.push_tailwind_token(token_prefix, pxv);
-        }
-        DimensionPercentage::Percentage(percentage_val) => {
-            tw_set.push_tailwind_token(
-                token_prefix,
-                percentage_val
-                    .to_css_string(PrinterOptions::default())
-                    .unwrap(),
-            );
-        }
-        DimensionPercentage::Calc(s) => tw_set.push_tailwind_token(
-            token_prefix,
-            format!("[{}]", s.to_css_string(PrinterOptions::default()).unwrap()),
-        ),
-    };
-}
-
-fn resolve_length_size(income_value: &Size, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    match income_value {
-        Size::Auto => {
-            tw_set.push_tailwind_token(token_prefix, "auto");
-        }
-        Size::LengthPercentage(a) => {
-            resolve_dimension(a, tw_set, token_prefix);
-        }
-        Size::MinContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "min");
-        }
-        Size::MaxContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "max");
-        }
-        Size::FitContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "fit");
-        }
-        Size::FitContentFunction(_) => {}
-        Size::Stretch(_) => {}
-        Size::Contain => {
-            tw_set.push_tailwind_token(token_prefix, "contain");
-        }
-    }
-}
-fn resolve_length_max_size(
-    income_value: &MaxSize,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match income_value {
-        MaxSize::LengthPercentage(a) => {
-            resolve_dimension(a, tw_set, token_prefix);
-        }
-        MaxSize::None => {
-            tw_set.push_tailwind_token(token_prefix, "none");
-        }
-        MaxSize::MinContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "min");
-        }
-        MaxSize::MaxContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "max");
-        }
-        MaxSize::FitContent(_) => {
-            tw_set.push_tailwind_token(token_prefix, "fit");
-        }
-        MaxSize::FitContentFunction(_) => {}
-        MaxSize::Stretch(_) => {}
-        MaxSize::Contain => {
-            tw_set.push_tailwind_token(token_prefix, "contain");
-        }
-    }
-}
-
-fn resolve_keyword<F: ToCss>(income_value: &F, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    tw_set.push_tailwind_token(
-        token_prefix,
-        income_value
-            .to_css_string(PrinterOptions::default())
-            .unwrap(),
-    );
-}
-
-fn resolve_border_side_width(
-    income_value: &BorderSideWidth,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match income_value {
-        BorderSideWidth::Length(p) => match p {
-            lightningcss::values::length::Length::Value(value) => {
-                let mut pxv = match value.to_px() {
-                    Some(v) => {
-                        if v >= 24f32 {
-                            format!("{}", (v / 4f32).round())
-                        } else {
-                            format!("{}", v.round() / 4f32)
-                        }
-                    }
-                    None => String::from(""),
-                };
-
-                if pxv.eq("") {
-                    let (vall, unit) = value.to_unit_value();
-                    if unit.to_lowercase().contains("em") {
-                        pxv = format!("{}", (vall * 4f32).round());
-                    } else {
-                        pxv = format!("{}{}", vall, unit)
-                    }
-                }
-
-                tw_set.push_tailwind_token(token_prefix, pxv);
-            }
-            lightningcss::values::length::Length::Calc(s) => tw_set.push_tailwind_token(
-                token_prefix,
-                format!("[{}]", s.to_css_string(PrinterOptions::default()).unwrap()),
-            ),
-        },
-        _ => resolve_keyword(income_value, tw_set, token_prefix),
-    }
-}
-
-fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    if let CssColor::CurrentColor = income_value {
-        tw_set.push_tailwind_token(token_prefix, "current");
-        return;
-    };
-
-    let mut red = 0u8;
-    let mut green = 0u8;
-    let mut blue = 0u8;
-    let mut alpha = 255u8;
-    let mut alpha_float = 1f32;
-    // } ;
-
-    if let CssColor::RGBA(pp) = income_value.to_rgb() {
-        red = pp.red;
-        green = pp.green;
-        blue = pp.blue;
-        alpha = pp.alpha;
-        alpha_float = pp.alpha_f32();
-    };
-
-    // println!(
-    //     "[{}] :: r:{}, g:{}, b:{}, a:{}  ",
-    //     token_prefix, red, green, blue, alpha
-    // );
-    if alpha != 255u8 {
-        let op = token_prefix.to_owned() + "-op";
-        tw_set.push_tailwind_token(op.as_str(), (alpha_float * 100f32).round());
-    }
-    let mut resolved_token = search_color(&red, &green, &blue);
-    if resolved_token.len() == 0 {
-        let resolved_raw = income_value
-            .to_css_string(PrinterOptions::default())
-            .unwrap();
-        resolved_token.push(resolved_raw);
-    } else if resolved_token.len() > 1 {
-        let rege = Regex::new(r"^(\w+)-(\d+)").unwrap();
-        resolved_token = resolved_token
-            .into_iter()
-            .filter(|token| rege.is_match(token) == false)
-            .collect();
-    }
-
-    // println!("resolved-token {}", resolved_token.join(" "));
-    tw_set.push_tailwind_token(token_prefix, &resolved_token[0]);
-
-    println!()
-}
-
-fn resolve_percentage_or_number(
-    income_value: &NumberOrPercentage,
-    tw_set: &mut TailwindTokenSet,
-    token_prefix: &str,
-) {
-    match income_value {
-        NumberOrPercentage::Percentage(p) => {
-            let value = (p.0).round() / 100f32;
-            tw_set.push_tailwind_token(token_prefix, &value);
-        }
-        NumberOrPercentage::Number(p) => {
-            tw_set.push_tailwind_token(token_prefix, format!("{:.prec$}", p, prec = 2usize));
-        }
-    }
-}
-
-fn resolve_time(income_value: &Time, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    let mut time_set = 0f32;
-    match *income_value {
-        Time::Seconds(a) => {
-            time_set = a * 1000f32;
-        }
-        Time::Milliseconds(a) => {
-            time_set = a;
-        }
-    }
-
-    tw_set.push_tailwind_token(token_prefix, time_set.round());
-}
-
-fn resolve_raw_exp<F: ToCss>(income_value: &F, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    let resolved_raw = income_value
-        .to_css_string(PrinterOptions::default())
-        .unwrap();
-    tw_set.push_tailwind_token(
-        token_prefix,
-        format!("[{}]", resolved_raw.replace(r"[\s|,]", "_")),
-    );
-}

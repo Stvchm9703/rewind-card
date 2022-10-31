@@ -1,111 +1,56 @@
 mod convert_token;
+mod resolve_token;
 mod tailwind_token;
 use crate::convert_token::resolve_style;
-use crate::tailwind_token::{init, TailwindTokenSet};
+use crate::tailwind_token::{search_media, TailwindTokenSet};
+use lightningcss::media_query::{MediaFeatureValue, MediaQuery};
 use lightningcss::{
-    properties::Property,
-    rules::{style::StyleRule, CssRule},
+    media_query::{MediaCondition, MediaFeature},
+    rules::CssRule,
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
     traits::ToCss,
-    values::{
-        calc::Calc,
-        length::{LengthPercentage, LengthPercentageOrAuto, LengthValue},
-        percentage::{DimensionPercentage, Percentage},
-    },
 };
+
 use serde_json;
 use std::{fs, path::Path};
 fn main() {
     tailwind_token::init();
-    let mut income_src = Path::new("./input-src/cdt-navbar.css");
+    let mut income_src = Path::new("./input-src/cdt-grid-card.css");
     read_css_file(income_src);
 }
 
 fn read_css_file(file_path: &Path) {
     // let fs::read(file_path).unwrap();
-    let mut tw_vec: Vec<tailwind_token::TailwindTokenSet> = Vec::new();
+    let mut tw_vec: Vec<TailwindTokenSet> = Vec::new();
     let file_string = fs::read_to_string(file_path).unwrap();
     let parser_set = StyleSheet::parse(&file_string, ParserOptions::default()).unwrap();
 
     // println!("{}" , serde_json::to_string_pretty(&parser_set).unwrap());
 
     for rule in parser_set.rules.0 {
-        let current_rule= rule.to_css_string(PrinterOptions::default()).unwrap();
+        let current_rule = rule.to_css_string(PrinterOptions::default()).unwrap();
         let current_layer = file_path.to_str().unwrap().to_string();
         match rule {
-            CssRule::Media(_) => {
+            CssRule::Media(m) => {
+                for p in m.rules.0 {
+                    if let CssRule::Style(s) = p {
+                        let mut tw_set = TailwindTokenSet::new();
+                        tw_set.set_layer_group(&current_layer);
+                        tw_set.set_raw_property(&current_rule);
+                        resolve_style(&s, &mut tw_set);
+                        tw_vec.push(tw_set);
+                    }
+                }
                 // p.query.
-                // for q in p.query.media_queries {
-                //     match q.condition.unwrap() {
-                //         lightningcss::media_query::MediaCondition::Feature(ss) => {
-                //             println!(
-                //                 "Feature: {}",
-                //                 ss.to_css_string(PrinterOptions::default()).unwrap()
-                //             );
-
-                //             match ss {
-                //                 lightningcss::media_query::MediaFeature::Plain { name, value } => {
-                //                     println!(
-                //                         "Plain: {} --- {}",
-                //                         name,
-                //                         value.to_css_string(PrinterOptions::default()).unwrap()
-                //                     );
-
-                //                     match value{
-                //                         lightningcss::media_query::MediaFeatureValue::Length(qwe) => {},
-                //                         lightningcss::media_query::MediaFeatureValue::Number(_) => {},
-                //                         lightningcss::media_query::MediaFeatureValue::Resolution(_) => {},
-                //                         lightningcss::media_query::MediaFeatureValue::Ratio(_) => {},
-                //                         lightningcss::media_query::MediaFeatureValue::Ident(_) => {},
-                //                     }
-                //                 }
-                //                 lightningcss::media_query::MediaFeature::Boolean(_) => {}
-                //                 lightningcss::media_query::MediaFeature::Range {
-                //                     name,
-                //                     operator,
-                //                     value,
-                //                 } => {
-                //                     println!(
-                //                         "Range: {} -- {} --- {}",
-                //                         name,
-                //                         operator.to_css_string(PrinterOptions::default()).unwrap(),
-                //                         value.to_css_string(PrinterOptions::default()).unwrap()
-                //                     );
-                //                 }
-                //                 lightningcss::media_query::MediaFeature::Interval {
-                //                     name,
-                //                     start,
-                //                     start_operator,
-                //                     end,
-                //                     end_operator,
-                //                 } => {}
-                //             }
-                //         }
-                //         lightningcss::media_query::MediaCondition::Not(_) => {}
-                //         lightningcss::media_query::MediaCondition::Operation(_, _) => {}
-                //         lightningcss::media_query::MediaCondition::InParens(_) => {}
-                //     }
-                //     if let Some(qualifier) = q.qualifier {
-                //         println!(
-                //             "qualifier: {}",
-                //             qualifier.to_css_string(PrinterOptions::default()).unwrap()
-                //         );
-                //     }
-
-                //     // match q.media_type {
-                //     //     lightningcss::media_query::MediaType::All => {
-                //     //     }
-                //     //     lightningcss::media_query::MediaType::Print => {},
-                //     //     lightningcss::media_query::MediaType::Screen => {},
-                //     //     lightningcss::media_query::MediaType::Custom(_) => {},
-                //     // }
-                //     // println!("media_type : {}" , q.media_type);
-                // }
+                let mut mq_token: Vec<String> = vec![];
+                for q in m.query.media_queries {
+                    let ext = resolve_media_query_prefix(q);
+                }
             }
             CssRule::Style(p) => {
-                let mut tw_set = tailwind_token::TailwindTokenSet::new();
-                tw_set.set_layer_group(current_layer);
-                tw_set.set_raw_property(current_rule);
+                let mut tw_set = TailwindTokenSet::new();
+                tw_set.set_layer_group(&current_layer);
+                tw_set.set_raw_property(&current_rule);
                 resolve_style(&p, &mut tw_set);
                 tw_vec.push(tw_set);
             }
@@ -132,4 +77,33 @@ fn read_css_file(file_path: &Path) {
     }
 
     println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
+}
+
+fn resolve_media_query_prefix(q: MediaQuery) -> String {
+    let mut temp: Vec<String> = vec![];
+    let mut resolve_name = String::new();
+    if let MediaCondition::Feature(ss) = q.condition.unwrap() {
+        if let MediaFeature::Plain { name, value } = ss {
+            resolve_name = name.to_string();
+            let mut rem_value = -1f32;
+            if let MediaFeatureValue::Length(qwe) = value {
+                if let lightningcss::values::length::Length::Value(v) = qwe {
+                    // let u = v.to_px();
+                    let (vv, unit) = v.to_unit_value();
+                    // println!("vv {} , unit {}", vv, unit);
+                    if unit.to_lowercase().contains("em") {
+                        rem_value = vv;
+                    } else {
+                        let u = v.to_px().unwrap_or_default();
+                        rem_value = (u / 16f32).round();
+                    }
+                }
+            }
+            let yyy = search_media(&resolve_name, &rem_value);
+            temp.extend_from_slice(&yyy);
+        }
+    }
+    
+
+    return temp.join(", ");
 }
