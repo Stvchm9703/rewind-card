@@ -30,9 +30,8 @@ fn read_css_file(file_path: &Path) {
     // println!("{}" , serde_json::to_string_pretty(&parser_set).unwrap());
 
     for rule in parser_set.rules.0 {
-        let mut tw_set = tailwind_token::TailwindTokenSet::new();
-        tw_set.set_layer_group(file_path.to_str().unwrap().to_string());
-        tw_set.set_raw_property(rule.to_css_string(PrinterOptions::default()).unwrap());
+        let current_rule= rule.to_css_string(PrinterOptions::default()).unwrap();
+        let current_layer = file_path.to_str().unwrap().to_string();
         match rule {
             CssRule::Media(_) => {
                 // p.query.
@@ -104,8 +103,11 @@ fn read_css_file(file_path: &Path) {
                 // }
             }
             CssRule::Style(p) => {
-                // println!("selectors : {}", p.selectors);
+                let mut tw_set = tailwind_token::TailwindTokenSet::new();
+                tw_set.set_layer_group(current_layer);
+                tw_set.set_raw_property(current_rule);
                 resolve_style(&p, &mut tw_set);
+                tw_vec.push(tw_set);
             }
             // CssRule::Import(_) => todo!(),
             // CssRule::Keyframes(_) => todo!(),
@@ -127,9 +129,7 @@ fn read_css_file(file_path: &Path) {
             // CssRule::Unknown(_) => todo!(),
             _ => {}
         }
-
-        tw_vec.push(tw_set);
     }
 
-    // println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
+    println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
 }

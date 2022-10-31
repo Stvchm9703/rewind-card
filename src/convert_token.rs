@@ -1,6 +1,7 @@
 use lightningcss::{
     properties::{
         border::BorderSideWidth,
+        effects::Filter,
         size::{BoxSizing, MaxSize, Size},
         Property,
     },
@@ -11,11 +12,13 @@ use lightningcss::{
         calc::Calc,
         color::CssColor,
         length::{LengthPercentage, LengthPercentageOrAuto, LengthValue},
-        percentage::{DimensionPercentage, Percentage},
+        percentage::{DimensionPercentage, NumberOrPercentage, Percentage},
+        time::Time,
     },
 };
+use regex::Regex;
 
-use crate::tailwind_token::{ColorToken, TailwindTokenSet};
+use crate::tailwind_token::{search_color, ColorToken, TailwindTokenSet};
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
     for prop in &rule.declarations.declarations {
@@ -23,13 +26,36 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
         match prop {
             Property::BackgroundColor(p) => resolve_color(p, tw_set, "bg"),
             // Property::BackgroundImage(_) => todo!(),
-            // Property::BackgroundPositionX(_) => todo!(),
-            // Property::BackgroundPositionY(_) => todo!(),
-            // Property::BackgroundPosition(_) => todo!(),
-            // Property::BackgroundSize(_) => todo!(),
-            // Property::BackgroundRepeat(_) => todo!(),
-            // Property::BackgroundAttachment(_) => todo!(),
-            // Property::BackgroundClip(_, _) => todo!(),
+            Property::BackgroundPositionX(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg");
+                }
+            }
+            Property::BackgroundPositionY(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg");
+                }
+            }
+            Property::BackgroundPosition(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg");
+                }
+            }
+            Property::BackgroundSize(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg");
+                }
+            }
+            Property::BackgroundRepeat(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg")
+                }
+            }
+            Property::BackgroundAttachment(p) => {
+                for s in p {
+                    resolve_keyword(s, tw_set, "bg")
+                }
+            }
             Property::BackgroundOrigin(p) => resolve_keyword(p, tw_set, "bg-origin"),
             Property::Background(p) => {
                 for s in p {
@@ -91,7 +117,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::MaxInlineSize(p) => {
                 resolve_length_max_size(p, tw_set, "max-inline");
             }
-            // Property::BoxSizing(_, _) => todo!(),
+            Property::BoxSizing(p, _) => resolve_keyword(p, tw_set, "box"),
             Property::Overflow(p) => {
                 resolve_keyword(&p.x, tw_set, "overflow-x");
                 resolve_keyword(&p.y, tw_set, "overflow-y");
@@ -148,14 +174,14 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             }
 
             // Property::BorderSpacing(_) => todo!(),
-            // Property::BorderTopColor(_) => todo!(),
-            // Property::BorderBottomColor(_) => todo!(),
-            // Property::BorderLeftColor(_) => todo!(),
-            // Property::BorderRightColor(_) => todo!(),
-            // Property::BorderBlockStartColor(_) => todo!(),
-            // Property::BorderBlockEndColor(_) => todo!(),
-            // Property::BorderInlineStartColor(_) => todo!(),
-            // Property::BorderInlineEndColor(_) => todo!(),
+            Property::BorderTopColor(p) => resolve_color(p, tw_set, "b-t"),
+            Property::BorderBottomColor(p) => resolve_color(p, tw_set, "b-b"),
+            Property::BorderLeftColor(p) => resolve_color(p, tw_set, "b-l"),
+            Property::BorderRightColor(p) => resolve_color(p, tw_set, "b-r"),
+            Property::BorderBlockStartColor(p) => resolve_color(p, tw_set, "b-t"),
+            Property::BorderBlockEndColor(p) => resolve_color(p, tw_set, "b-b"),
+            Property::BorderInlineStartColor(p) => resolve_color(p, tw_set, "b-l"),
+            Property::BorderInlineEndColor(p) => resolve_color(p, tw_set, "b-r"),
             Property::BorderTopStyle(p) => resolve_keyword(p, tw_set, "b-t"),
             Property::BorderBottomStyle(p) => resolve_keyword(p, tw_set, "b-b"),
             Property::BorderLeftStyle(p) => resolve_keyword(p, tw_set, "b-l"),
@@ -194,7 +220,12 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::BorderImageWidth(_) => todo!(),
             // Property::BorderImageSlice(_) => todo!(),
             // Property::BorderImage(_, _) => todo!(),
-            // Property::BorderColor(_) => todo!(),
+            Property::BorderColor(p) => {
+                resolve_color(&p.top, tw_set, "b-t");
+                resolve_color(&p.bottom, tw_set, "b-b");
+                resolve_color(&p.left, tw_set, "b-l");
+                resolve_color(&p.right, tw_set, "b-r");
+            }
             Property::BorderStyle(p) => {
                 resolve_keyword(&p.top, tw_set, "b-t");
                 resolve_keyword(&p.bottom, tw_set, "b-b");
@@ -207,7 +238,10 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_border_side_width(&p.left, tw_set, "b-l");
                 resolve_border_side_width(&p.right, tw_set, "b-r");
             }
-            // Property::BorderBlockColor(_) => todo!(),
+            Property::BorderBlockColor(p) => {
+                resolve_color(&p.start, tw_set, "b-t");
+                resolve_color(&p.end, tw_set, "b-b");
+            }
             Property::BorderBlockStyle(p) => {
                 resolve_keyword(&p.start, tw_set, "b-t");
                 resolve_keyword(&p.end, tw_set, "b-b");
@@ -216,7 +250,10 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_border_side_width(&p.start, tw_set, "b-t");
                 resolve_border_side_width(&p.end, tw_set, "b-b");
             }
-            // Property::BorderInlineColor(_) => todo!(),
+            Property::BorderInlineColor(p) => {
+                resolve_color(&p.start, tw_set, "b-l");
+                resolve_color(&p.end, tw_set, "b-r");
+            }
             Property::BorderInlineStyle(p) => {
                 resolve_keyword(&p.start, tw_set, "b-l");
                 resolve_keyword(&p.end, tw_set, "b-r");
@@ -228,65 +265,71 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::Border(p) => {
                 resolve_keyword(&p.style, tw_set, "b-a");
                 resolve_border_side_width(&p.width, tw_set, "b-a");
+                resolve_color(&p.color, tw_set, "b-a");
             }
             Property::BorderTop(p) => {
                 resolve_keyword(&p.style, tw_set, "b-t");
                 resolve_border_side_width(&p.width, tw_set, "b-t");
+                resolve_color(&p.color, tw_set, "b-t");
             }
             Property::BorderBottom(p) => {
                 resolve_keyword(&p.style, tw_set, "b-b");
                 resolve_border_side_width(&p.width, tw_set, "b-b");
+                resolve_color(&p.color, tw_set, "b-b");
             }
             Property::BorderLeft(p) => {
                 resolve_keyword(&p.style, tw_set, "b-l");
                 resolve_border_side_width(&p.width, tw_set, "b-l");
+                resolve_color(&p.color, tw_set, "b-l");
             }
             Property::BorderRight(p) => {
                 resolve_keyword(&p.style, tw_set, "b-r");
                 resolve_border_side_width(&p.width, tw_set, "b-r");
+                resolve_color(&p.color, tw_set, "b-r");
             }
             Property::BorderBlock(p) => {
-                // todo: color
-
+                resolve_color(&p.color, tw_set, "b-t");
                 resolve_keyword(&p.style, tw_set, "b-t");
                 resolve_border_side_width(&p.width, tw_set, "b-t");
-
+                resolve_color(&p.color, tw_set, "b-b");
                 resolve_keyword(&p.style, tw_set, "b-b");
                 resolve_border_side_width(&p.width, tw_set, "b-b");
             }
             Property::BorderBlockStart(p) => {
-                // todo: color
+                resolve_color(&p.color, tw_set, "b-t");
                 resolve_keyword(&p.style, tw_set, "b-t");
                 resolve_border_side_width(&p.width, tw_set, "b-t");
             }
             Property::BorderBlockEnd(p) => {
-                // todo: color
+                resolve_color(&p.color, tw_set, "b-b");
                 resolve_keyword(&p.style, tw_set, "b-b");
                 resolve_border_side_width(&p.width, tw_set, "b-b");
             }
             Property::BorderInline(p) => {
-                // todo: color
                 resolve_keyword(&p.style, tw_set, "b-l");
                 resolve_border_side_width(&p.width, tw_set, "b-l");
+                resolve_color(&p.color, tw_set, "b-l");
+
                 resolve_keyword(&p.style, tw_set, "b-r");
                 resolve_border_side_width(&p.width, tw_set, "b-r");
+                resolve_color(&p.color, tw_set, "b-r");
             }
             Property::BorderInlineStart(p) => {
-                // todo: color
+                resolve_color(&p.color, tw_set, "b-l");
                 resolve_keyword(&p.style, tw_set, "b-l");
                 resolve_border_side_width(&p.width, tw_set, "b-l");
             }
             Property::BorderInlineEnd(p) => {
-                // #todo : color
+                resolve_color(&p.color, tw_set, "b-r");
                 resolve_keyword(&p.style, tw_set, "b-r");
                 resolve_border_side_width(&p.width, tw_set, "b-r");
             }
             Property::Outline(p) => {
-                // #todo : color
+                resolve_color(&p.color, tw_set, "outline");
                 resolve_border_side_width(&p.width, tw_set, "outline");
                 resolve_keyword(&p.style, tw_set, "outline");
             }
-            // Property::OutlineColor(_) => todo!(),
+            Property::OutlineColor(p) => resolve_color(p, tw_set, "outline"),
             Property::OutlineStyle(p) => resolve_keyword(p, tw_set, "outline"),
             Property::OutlineWidth(p) => resolve_border_side_width(p, tw_set, "outline"),
             Property::FlexDirection(p, _) => resolve_keyword(p, tw_set, "flex"),
@@ -297,7 +340,11 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::FlexBasis(p, _) => {
                 resolve_length_length_percentage_or_auto(&p, tw_set, "basis")
             }
-            // Property::Flex(_, _) => todo!(),
+            Property::Flex(p, _) => {
+                resolve_length_length_percentage_or_auto(&p.basis, tw_set, "basis");
+                tw_set.push_tailwind_token("shrink", &p.shrink);
+                tw_set.push_tailwind_token("grow", &p.grow);
+            }
             Property::Order(p, _) => tw_set.push_tailwind_token("order", p),
             Property::AlignContent(p, _) => resolve_keyword(p, tw_set, "content"),
             Property::JustifyContent(p, _) => resolve_keyword(p, tw_set, "justify"),
@@ -308,8 +355,8 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::AlignItems(p, _) => resolve_keyword(p, tw_set, "items"),
             Property::JustifyItems(p) => resolve_keyword(p, tw_set, "justify-items"),
             Property::PlaceItems(p) => resolve_keyword(p, tw_set, "place-items"),
-            Property::RowGap(p) => resolve_keyword(p, tw_set, "gap"),
-            Property::ColumnGap(p) => resolve_keyword(p, tw_set, "gap"),
+            Property::RowGap(p) => resolve_keyword(p, tw_set, "gap-x"),
+            Property::ColumnGap(p) => resolve_keyword(p, tw_set, "gap-y"),
             Property::Gap(p) => resolve_keyword(p, tw_set, "gap"),
             // Property::BoxOrient(_, _) => todo!(),
             // Property::BoxDirection(_, _) => todo!(),
@@ -329,21 +376,167 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::FlexPositive(_, _) => todo!(),
             // Property::FlexNegative(_, _) => todo!(),
             // Property::FlexPreferredSize(_, _) => todo!(),
-            // Property::GridTemplateColumns(_) => todo!(),
-            // Property::GridTemplateRows(_) => todo!(),
-            // Property::GridAutoColumns(_) => todo!(),
-            // Property::GridAutoRows(_) => todo!(),
-            // Property::GridAutoFlow(_) => todo!(),
-            // Property::GridTemplateAreas(_) => todo!(),
+            // ====
+            Property::GridTemplateColumns(p) => match p {
+                lightningcss::properties::grid::TrackSizing::None => {
+                    resolve_keyword(p, tw_set, "grid-cols")
+                }
+                lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                    resolve_raw_exp(a, tw_set, "grid-cols");
+                }
+            },
+            Property::GridTemplateRows(p) => match p {
+                lightningcss::properties::grid::TrackSizing::None => {
+                    resolve_keyword(p, tw_set, "grid-rows")
+                }
+                lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                    resolve_raw_exp(a, tw_set, "grid-rows");
+                }
+            },
+            Property::GridAutoColumns(p) => {
+                for a in &p.0 {
+                    resolve_track_size(a, tw_set, "auto-cols");
+                }
+            }
+            Property::GridAutoRows(p) => {
+                for a in &p.0 {
+                    resolve_track_size(a, tw_set, "auto-rows");
+                }
+            }
+            Property::GridAutoFlow(p) => resolve_keyword(p, tw_set, "grid-flow"),
+            Property::GridTemplateAreas(p) => {
+                resolve_raw_exp(p, tw_set, "grid-areas");
+            }
             // Property::GridTemplate(_) => todo!(),
-            // Property::Grid(_) => todo!(),
-            // Property::GridRowStart(_) => todo!(),
-            // Property::GridRowEnd(_) => todo!(),
-            // Property::GridColumnStart(_) => todo!(),
-            // Property::GridColumnEnd(_) => todo!(),
-            // Property::GridRow(_) => todo!(),
-            // Property::GridColumn(_) => todo!(),
-            // Property::GridArea(_) => todo!(),
+            Property::Grid(p) => {
+                resolve_raw_exp(&p.areas, tw_set, "grid-areas");
+                resolve_keyword(&p.auto_flow, tw_set, "grid-flow");
+                for a in &p.auto_columns.0 {
+                    resolve_track_size(a, tw_set, "auto-cols");
+                }
+
+                for a in &p.auto_rows.0 {
+                    resolve_track_size(a, tw_set, "auto-rows");
+                }
+
+                match &p.columns {
+                    lightningcss::properties::grid::TrackSizing::None => {
+                        tw_set.push_tailwind_token("grid-cols", "none");
+                    }
+                    lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                        resolve_raw_exp(a, tw_set, "grid-cols");
+                    }
+                }
+                match &p.rows {
+                    lightningcss::properties::grid::TrackSizing::None => {
+                        tw_set.push_tailwind_token("grid-rows", "none");
+                    }
+                    lightningcss::properties::grid::TrackSizing::TrackList(a) => {
+                        resolve_raw_exp(a, tw_set, "grid-rows");
+                    }
+                }
+            }
+            Property::GridRowStart(p) => {
+                match p {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "grid-rows"),
+                }
+                //  resolve_keyword(p, tw_set, "col-start"),
+            }
+            Property::GridRowEnd(p) => {
+                match p {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "row-end"),
+                }
+                //  resolve_keyword(p, tw_set, "row-start"),
+            }
+            Property::GridColumnStart(p) => {
+                match p {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-start"),
+                }
+                //  resolve_keyword(p, tw_set, "col-start"),
+            }
+            Property::GridColumnEnd(p) => {
+                match p {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-end"),
+                }
+                //  resolve_keyword(p, tw_set, "col-start"),
+            }
+            Property::GridRow(p) => {
+                match &p.start {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "row-start"),
+                }
+                match &p.end {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "row-end"),
+                }
+            }
+            Property::GridColumn(p) => {
+                match &p.start {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-start"),
+                }
+                match &p.end {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-end"),
+                }
+            }
+            Property::GridArea(p) => {
+                let resolve_name = p.to_css_string(PrinterOptions::default()).unwrap();
+                if resolve_name.contains(r"[\d|\/]") == false {
+                    tw_set.push_tailwind_token(
+                        "area-",
+                        format!("[{}]", resolve_name.replace(r"[\s|,]", "_")),
+                    );
+
+                    return;
+                }
+
+                match &p.row_start {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "row-start"),
+                }
+                match &p.row_end {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("row-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "row-end"),
+                }
+
+                match &p.column_start {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-start", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-start"),
+                }
+                match &p.column_end {
+                    lightningcss::properties::grid::GridLine::Auto => {
+                        tw_set.push_tailwind_token("col-end", "auto")
+                    }
+                    s => resolve_raw_exp(s, tw_set, "col-end"),
+                }
+            }
             Property::MarginTop(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "mt"),
             Property::MarginBottom(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "mb"),
             Property::MarginLeft(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "ml"),
@@ -490,7 +683,42 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_length_length_percentage_or_auto(&p.right, tw_set, "scroll-pr");
             }
 
-            Property::FontWeight(p) => resolve_keyword(p, tw_set, "font"),
+            Property::FontWeight(p) => {
+                match p {
+                    lightningcss::properties::font::FontWeight::Absolute(a) => match a {
+                        lightningcss::properties::font::AbsoluteFontWeight::Weight(k) => {
+                            if k <= &200f32 {
+                                tw_set.push_tailwind_token("font", "extralight");
+                            } else if k <= &300f32 {
+                                tw_set.push_tailwind_token("font", "light");
+                            } else if k <= &400f32 {
+                                tw_set.push_tailwind_token("font", "normal");
+                            } else if k <= &500f32 {
+                                tw_set.push_tailwind_token("font", "medium");
+                            } else if k <= &600f32 {
+                                tw_set.push_tailwind_token("font", "semibold");
+                            } else if k <= &700f32 {
+                                tw_set.push_tailwind_token("font", "bold");
+                            } else {
+                                tw_set.push_tailwind_token("font", "extrabold");
+                            }
+                        }
+                        lightningcss::properties::font::AbsoluteFontWeight::Normal => {
+                            tw_set.push_tailwind_token("font", "normal")
+                        }
+                        lightningcss::properties::font::AbsoluteFontWeight::Bold => {
+                            tw_set.push_tailwind_token("font", "bold")
+                        }
+                    },
+                    lightningcss::properties::font::FontWeight::Bolder => {
+                        tw_set.push_tailwind_token("font", "medium")
+                    }
+                    lightningcss::properties::font::FontWeight::Lighter => {
+                        tw_set.push_tailwind_token("font", "light");
+                    }
+                }
+                // resolve_keyword(p, tw_set, "font")
+            }
             // Property::FontSize(p) => todo!(),
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
@@ -503,11 +731,148 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::Font(_) => todo!(),
             // Property::VerticalAlign(_) => todo!(),
             // Property::FontPalette(_) => todo!(),
-            // Property::TransitionProperty(_, _) => todo!(),
-            // Property::TransitionDuration(_, _) => todo!(),
-            // Property::TransitionDelay(_, _) => todo!(),
-            // Property::TransitionTimingFunction(_, _) => todo!(),
-            // Property::Transition(_, _) => todo!(),
+
+            Property::TransitionProperty(p, _) => {
+                for q in p {
+                    if q.name() == "all" {
+                        tw_set.push_tailwind_token("transition", "all");
+                    } 
+                    else if q.name().contains("color") {
+                        tw_set.push_tailwind_token("transition", "colors");
+                    }
+                     else if q.name().contains("opacity") {
+                        tw_set.push_tailwind_token("transition", "opacity");
+                    }
+                    else if q.name().contains("shadow") {
+                        tw_set.push_tailwind_token("transition", "shadow");
+                    }
+                    else if q.name().contains("transform") {
+                        tw_set.push_tailwind_token("transition", "transform");
+                    }
+                }
+            },
+            Property::TransitionDuration(p, _) => {
+                for q in p {
+                    resolve_time(q, tw_set, "duration");
+                }
+            }
+            Property::TransitionDelay(p, _) => {
+                for q in p {
+                    resolve_time(q, tw_set, "delay");
+                }
+            }
+            Property::TransitionTimingFunction(p, _) => {
+                for q in p {
+                    // resolve_time(q, tw_set, "delay");
+                    match *q {
+                        lightningcss::values::easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                            // /**
+                            // standard: {
+                            //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
+                            //     expressive: 'cubic-bezier(0.4, 0.14, 0.3, 1)',
+                            // },
+                            // entrance: {
+                            //     productive: 'cubic-bezier(0, 0, 0.38, 0.9)',
+                            //     expressive: 'cubic-bezier(0, 0, 0.3, 1)',
+                            // },
+                            // exit: {
+                            //     productive: 'cubic-bezier(0.2, 0, 1, 0.9)',
+                            //     expressive: 'cubic-bezier(0.4, 0.14, 1, 1)',
+                            // },
+                            //  */
+
+                            if (a == 0.2f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "standard-productive");
+                            }
+                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 0.3f32) && (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "standard-expressive");
+                            }
+                            else if (a == 0f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "entrance-productive");
+                            }
+                            else if (a == 0f32) && (b == 0f32) && (c == 0.3f32 )&& (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "entrance-expressive");
+                            }  
+                            else if (a == 0.2f32) && (b == 0f32) && (c == 1f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "exit-productive");
+                            }
+                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 1f32) && (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "exit-expressive");
+                            } 
+                            else {
+                                tw_set.push_tailwind_token("ease", "exit-expressive");
+                            } 
+                            
+                        },
+                        lightningcss::values::easing::EasingFunction::Steps(_, _) => {},
+                        lightningcss::values::easing::EasingFunction::Linear => {
+                            tw_set.push_tailwind_token("ease", "linear");
+                        },
+                        _ => {
+                            resolve_keyword(q, tw_set, "");
+                        }
+                        // lightningcss::values::easing::EasingFunction::Ease => todo!(),
+                        // lightningcss::values::easing::EasingFunction::EaseIn => todo!(),
+                        // lightningcss::values::easing::EasingFunction::EaseOut => todo!(),
+                        // lightningcss::values::easing::EasingFunction::EaseInOut => todo!(),
+                    }
+                }
+            }
+            Property::Transition(p, _) => {
+                for q in p {
+                    resolve_time(&q.delay, tw_set, "delay");
+                    resolve_time(&q.duration, tw_set, "duration");
+                    match q.timing_function {
+                        lightningcss::values::easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                            // /**
+                            // standard: {
+                            //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
+                            //     expressive: 'cubic-bezier(0.4, 0.14, 0.3, 1)',
+                            // },
+                            // entrance: {
+                            //     productive: 'cubic-bezier(0, 0, 0.38, 0.9)',
+                            //     expressive: 'cubic-bezier(0, 0, 0.3, 1)',
+                            // },
+                            // exit: {
+                            //     productive: 'cubic-bezier(0.2, 0, 1, 0.9)',
+                            //     expressive: 'cubic-bezier(0.4, 0.14, 1, 1)',
+                            // },
+                            //  */
+
+                            if (a == 0.2f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "standard-productive");
+                            }
+                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 0.3f32) && (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "standard-expressive");
+                            }
+                            else if (a == 0f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "entrance-productive");
+                            }
+                            else if (a == 0f32) && (b == 0f32) && (c == 0.3f32 )&& (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "entrance-expressive");
+                            }  
+                            else if (a == 0.2f32) && (b == 0f32) && (c == 1f32) && (d == 0.9f32) {
+                                tw_set.push_tailwind_token("ease", "exit-productive");
+                            }
+                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 1f32) && (d == 1f32) {
+                                tw_set.push_tailwind_token("ease", "exit-expressive");
+                            } 
+                            else {
+                                tw_set.push_tailwind_token("ease", format!("[cubic-bezier:{}_{}_{}_{}]" , a,b,c,d));
+                            } 
+                            
+                        },
+                        lightningcss::values::easing::EasingFunction::Steps(_, _) => {},
+                        lightningcss::values::easing::EasingFunction::Linear => {
+                            tw_set.push_tailwind_token("ease", "linear");
+                        },
+                        _ => {
+                            resolve_keyword(q, tw_set, "");
+                        }
+                    }
+                }
+            }
+
             // Property::AnimationName(_, _) => todo!(),
             // Property::AnimationDuration(_, _) => todo!(),
             // Property::AnimationTimingFunction(_, _) => todo!(),
@@ -517,14 +882,99 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::AnimationDelay(_, _) => todo!(),
             // Property::AnimationFillMode(_, _) => todo!(),
             // Property::Animation(_, _) => todo!(),
-            // Property::Transform(_, _) => todo!(),
-            // Property::TransformOrigin(_, _) => todo!(),
-            // Property::TransformStyle(_, _) => todo!(),
+
+            Property::Transform(p, _) => {
+                for q in &p.0{
+                    match q {
+                        lightningcss::properties::transform::Transform::Translate(x, y) => {
+                            resolve_dimension(&x, tw_set, "translate-x");
+                            resolve_dimension(&y, tw_set, "translate-y");
+                        },
+                        lightningcss::properties::transform::Transform::TranslateX(x) => {
+                            resolve_dimension(&x, tw_set, "translate-x");
+                        },
+                        lightningcss::properties::transform::Transform::TranslateY(y) => {
+                            resolve_dimension(&y, tw_set, "translate-y");
+                        },
+                        lightningcss::properties::transform::Transform::TranslateZ(z) => {
+                            resolve_keyword(&z, tw_set, "translate-z");
+
+                        },
+                        lightningcss::properties::transform::Transform::Translate3d(x, y, z) => {
+                            resolve_dimension(&x, tw_set, "translate-x");
+                            resolve_dimension(&y, tw_set, "translate-y");
+                            resolve_keyword(&z, tw_set, "translate-z");
+                        },
+                        lightningcss::properties::transform::Transform::Scale(x, y) => {
+                            resolve_percentage_or_number(&x, tw_set, "scale-x");
+                            resolve_percentage_or_number(&y, tw_set, "scale-y");
+                        },
+                        lightningcss::properties::transform::Transform::ScaleX(x) => {
+                            resolve_percentage_or_number(&x, tw_set, "scale-x");
+                        },
+                        lightningcss::properties::transform::Transform::ScaleY(y) => {
+                            resolve_percentage_or_number(&y, tw_set, "scale-y");
+                        },
+                        lightningcss::properties::transform::Transform::ScaleZ(z) => {
+                            resolve_percentage_or_number(&z, tw_set, "scale-z");
+
+                        },
+                        lightningcss::properties::transform::Transform::Scale3d(x, y, z) => {
+                            resolve_percentage_or_number(&x, tw_set, "scale-x");
+                            resolve_percentage_or_number(&y, tw_set, "scale-y");
+                            resolve_percentage_or_number(&z, tw_set, "scale-z");
+                        },
+                        lightningcss::properties::transform::Transform::Rotate(x) => {
+                            tw_set.push_tailwind_token("rotate", x.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::RotateX(x) => {
+                            tw_set.push_tailwind_token("rotate-x", x.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::RotateY(x) => {
+                            tw_set.push_tailwind_token("rotate-y", x.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::RotateZ(x) => {
+                            tw_set.push_tailwind_token("rotate-z", x.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::Rotate3d(x, y, z, _) => {
+                            tw_set.push_tailwind_token("rotate-x", x.to_degrees());
+                            tw_set.push_tailwind_token("rotate-y", y.to_degrees());
+                            tw_set.push_tailwind_token("rotate-z", z.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::Skew(x, y) => {
+                            tw_set.push_tailwind_token("skew-x", x.to_degrees());
+                            tw_set.push_tailwind_token("skew-y", y.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::SkewX(x) => {
+                            tw_set.push_tailwind_token("skew-x", x.to_degrees());
+                        },
+                        lightningcss::properties::transform::Transform::SkewY(y) => {
+                            tw_set.push_tailwind_token("skew-y", y.to_degrees());
+
+                        },
+                        // lightningcss::properties::transform::Transform::Perspective(_) => todo!(),
+                        // lightningcss::properties::transform::Transform::Matrix(_) => todo!(),
+                        // lightningcss::properties::transform::Transform::Matrix3d(_) => todo!(),
+                        _ => (),
+                    }
+                }
+            },
+            Property::TransformOrigin(p, _) => {
+                let resolved_raw = p
+                    .to_css_string(PrinterOptions::default())
+                    .unwrap();
+                tw_set.push_tailwind_token(
+                    "origin",
+                   resolved_raw.replace(" ", "-") ,
+                );
+            },
+            Property::TransformStyle(p, _) => resolve_keyword(p, tw_set, "preserve"),
             // Property::TransformBox(_) => todo!(),
+
             // Property::BackfaceVisibility(_, _) => todo!(),
             Property::Perspective(p, _) => resolve_keyword(p, tw_set, "perspective"),
             // Property::PerspectiveOrigin(_, _) => todo!(),
-            // Property::Translate(_) => todo!(),
+            Property::Translate(p) => resolve_keyword(p, tw_set, "translate"),
             Property::Rotate(p) => {
                 resolve_keyword(&p.x, tw_set, "rotate-x");
                 resolve_keyword(&p.y, tw_set, "rotate-y");
@@ -535,13 +985,13 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_keyword(&p.y, tw_set, "scale-y");
                 resolve_keyword(&p.z, tw_set, "scale-z");
             }
-            // Property::TextTransform(_) => todo!(),
-            // Property::WhiteSpace(_) => todo!(),
-            // Property::TabSize(_, _) => todo!(),
-            // Property::WordBreak(_) => todo!(),
+            Property::TextTransform(p) => resolve_keyword(p, tw_set, ""),
+            Property::WhiteSpace(p) => resolve_keyword(p, tw_set, "whitespace"),
+            Property::TabSize(p, _) => resolve_keyword(p, tw_set, "tab"),
+            Property::WordBreak(p) => resolve_keyword(p, tw_set, ""),
             // Property::LineBreak(_) => todo!(),
             // Property::Hyphens(_, _) => todo!(),
-            // Property::OverflowWrap(_) => todo!(),
+            Property::OverflowWrap(p) => resolve_keyword(p, tw_set, ""),
             // Property::WordWrap(_) => todo!(),
             Property::TextAlign(p) => resolve_keyword(p, tw_set, "text"),
             Property::TextAlignLast(p, _) => resolve_keyword(p, tw_set, "last-text"),
@@ -550,25 +1000,25 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::LetterSpacing(_) => todo!(),
             // Property::TextIndent(_) => todo!(),
             // Property::TextDecorationLine(_, _) => todo!(),
-            // Property::TextDecorationStyle(_, _) => todo!(),
+            Property::TextDecorationStyle(p, _) => resolve_keyword(p, tw_set, "decoration"),
             // Property::TextDecorationColor(_, _) => todo!(),
             // Property::TextDecorationThickness(_) => todo!(),
-            // Property::TextDecoration(_, _) => todo!(),
+            Property::TextDecoration(p, _) => resolve_keyword(&p.style, tw_set, "decoration"),
             // Property::TextDecorationSkipInk(_, _) => todo!(),
             // Property::TextEmphasisStyle(_, _) => todo!(),
             // Property::TextEmphasisColor(_, _) => todo!(),
             // Property::TextEmphasis(_, _) => todo!(),
             // Property::TextEmphasisPosition(_, _) => todo!(),
             // Property::TextShadow(_) => todo!(),
-            // Property::BoxDecorationBreak(_, _) => todo!(),
-            // Property::Resize(_) => todo!(),
+            Property::BoxDecorationBreak(p, _) => resolve_keyword(&p, tw_set, "decoration"),
+            Property::Resize(p) => resolve_keyword(&p, tw_set, "resize"),
             Property::Cursor(p) => resolve_keyword(p, tw_set, "cursor"),
-            Property::CaretColor(p) => match p {
-                lightningcss::properties::ui::ColorOrAuto::Auto => todo!(),
-                lightningcss::properties::ui::ColorOrAuto::Color(a) => {
-                    // let sa = a.to_css_string(PrinterOptions::default()).unwrap();
-                }
-            },
+            // Property::CaretColor(p) => match p {
+            //     lightningcss::properties::ui::ColorOrAuto::Auto => todo!(),
+            //     lightningcss::properties::ui::ColorOrAuto::Color(a) => {
+            //         // let sa = a.to_css_string(PrinterOptions::default()).unwrap();
+            //     }
+            // },
             // Property::CaretShape(_) => todo!(),
             // Property::Caret(_) => todo!(),
             Property::UserSelect(p, _) => resolve_keyword(p, tw_set, "select"),
@@ -580,14 +1030,28 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::ListStyle(p) => resolve_keyword(p, tw_set, "list"),
             // Property::MarkerSide(_) => todo!(),
             // Property::Composes(_) => todo!(),
-            Property::Fill(p) => resolve_keyword(p, tw_set, "fill"),
+            Property::Fill(p) => match p {
+                lightningcss::properties::svg::SVGPaint::None => resolve_keyword(p, tw_set, "fill"),
+                lightningcss::properties::svg::SVGPaint::Color(a) => {
+                    resolve_color(&a, tw_set, "fill")
+                }
+                _ => {}
+            },
             // Property::FillRule(_) => todo!(),
             // Property::FillOpacity(_) => todo!(),
-            // Property::Stroke(_) => todo!(),
+            Property::Stroke(p) => match p {
+                lightningcss::properties::svg::SVGPaint::None => {
+                    tw_set.push_tailwind_token("stroke", "none")
+                }
+                lightningcss::properties::svg::SVGPaint::Color(a) => {
+                    resolve_color(a, tw_set, "fill")
+                }
+                _ => {}
+            },
             // Property::StrokeOpacity(_) => todo!(),
             Property::StrokeWidth(p) => resolve_dimension(p, tw_set, "stroke"),
-            // Property::StrokeLinecap(_) => todo!(),
-            // Property::StrokeLinejoin(_) => todo!(),
+            Property::StrokeLinecap(p) => resolve_keyword(p, tw_set, "stroke-cap"),
+            Property::StrokeLinejoin(p) => resolve_keyword(p, tw_set, "stroke-join"),
             // Property::StrokeMiterlimit(_) => todo!(),
             // Property::StrokeDasharray(_) => todo!(),
             // Property::StrokeDashoffset(_) => todo!(),
@@ -614,7 +1078,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::MaskSize(_, _) => todo!(),
             // Property::MaskComposite(_) => todo!(),
             // Property::MaskType(_) => todo!(),
-            // Property::Mask(_, _) => todo!(),
+            // Property::Mask(p, _) => todo!(),
             // Property::MaskBorderSource(_) => todo!(),
             // Property::MaskBorderMode(_) => todo!(),
             // Property::MaskBorderSlice(_) => todo!(),
@@ -636,17 +1100,77 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
                 lightningcss::properties::effects::FilterList::Filters(dd) => {
                     for aaa in dd {
-                        resolve_keyword(aaa, tw_set, "filter");
+                        match aaa {
+                            // lightningcss::properties::effects::Filter::Url(_) => {},
+                            Filter::Blur(p) => resolve_keyword(p, tw_set, "filter-blur"),
+                            Filter::Brightness(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-brightness")
+                            }
+                            Filter::Contrast(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-contrast")
+                            }
+                            Filter::Grayscale(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-grayscale")
+                            }
+                            Filter::HueRotate(p) => resolve_keyword(p, tw_set, "filter-hue-rotate"),
+                            Filter::Invert(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-invert")
+                            }
+                            // Filter::Opacity(_) => resolve_keyword(p, tw_set, "filter-blur"),
+                            Filter::Saturate(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-saturate")
+                            }
+                            Filter::Sepia(p) => {
+                                resolve_percentage_or_number(p, tw_set, "filter-sepia")
+                            }
+                            Filter::DropShadow(p) => {
+                                resolve_keyword(p, tw_set, "filter-drop-shadow")
+                            }
+                            _ => {}
+                        }
+                        // resolve_keyword(aaa, tw_set, "filter");
                     }
                 }
             },
             Property::BackdropFilter(p, _) => match p {
                 lightningcss::properties::effects::FilterList::None => {
-                    tw_set.push_tailwind_token("filter", "none")
+                    tw_set.push_tailwind_token("backdrop-filter", "none")
                 }
                 lightningcss::properties::effects::FilterList::Filters(dd) => {
                     for aaa in dd {
-                        resolve_keyword(aaa, tw_set, "filter");
+                        match aaa {
+                            // lightningcss::properties::effects::Filter::Url(_) => {},
+                            Filter::Blur(p) => resolve_keyword(p, tw_set, "backdrop-filter-blur"),
+                            Filter::Brightness(p) => resolve_percentage_or_number(
+                                p,
+                                tw_set,
+                                "backdrop-filter-brightness",
+                            ),
+                            Filter::Contrast(p) => {
+                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-contrast")
+                            }
+                            Filter::Grayscale(p) => {
+                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-grayscale")
+                            }
+                            Filter::HueRotate(p) => {
+                                resolve_keyword(p, tw_set, "backdrop-filter-hue-rotate")
+                            }
+                            Filter::Invert(p) => {
+                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-invert")
+                            }
+                            // Filter::Opacity(_) => resolve_keyword(p, tw_set, "backdrop-filter-blur"),
+                            Filter::Saturate(p) => {
+                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-saturate")
+                            }
+                            Filter::Sepia(p) => {
+                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-sepia")
+                            }
+                            Filter::DropShadow(p) => {
+                                resolve_keyword(p, tw_set, "backdrop-filter-drop-shadow")
+                            }
+                            _ => (),
+                        }
+                        // resolve_keyword(aaa, tw_set, "filter");
                     }
                 }
             },
@@ -657,6 +1181,39 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::Unparsed(_) => todo!(),
             // Property::Custom(_) => todo!(),
             _ => {}
+        }
+    }
+}
+
+fn resolve_track_size(
+    income_value: &lightningcss::properties::grid::TrackSize,
+    tw_set: &mut TailwindTokenSet,
+    token_prefix: &str,
+) {
+    match income_value {
+        lightningcss::properties::grid::TrackSize::TrackBreadth(k) => match k {
+            lightningcss::properties::grid::TrackBreadth::Flex(k) => {
+                tw_set.push_tailwind_token(token_prefix, k)
+            }
+            lightningcss::properties::grid::TrackBreadth::Length(k) => {
+                resolve_dimension(k, tw_set, token_prefix)
+            }
+            lightningcss::properties::grid::TrackBreadth::MinContent => {
+                tw_set.push_tailwind_token(token_prefix, "min");
+            }
+
+            lightningcss::properties::grid::TrackBreadth::MaxContent => {
+                tw_set.push_tailwind_token(token_prefix, "max");
+            }
+            lightningcss::properties::grid::TrackBreadth::Auto => {
+                tw_set.push_tailwind_token(token_prefix, "auto");
+            }
+        },
+        lightningcss::properties::grid::TrackSize::MinMax(_, _) => {
+            resolve_raw_exp(income_value, tw_set, token_prefix)
+        }
+        lightningcss::properties::grid::TrackSize::FitContent(_) => {
+            tw_set.push_tailwind_token(token_prefix, "[fit-content]");
         }
     }
 }
@@ -822,10 +1379,16 @@ fn resolve_border_side_width(
 }
 
 fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+    if let CssColor::CurrentColor = income_value {
+        tw_set.push_tailwind_token(token_prefix, "current");
+        return;
+    };
+
     let mut red = 0u8;
     let mut green = 0u8;
     let mut blue = 0u8;
-    let mut alpha = 1u8;
+    let mut alpha = 255u8;
+    let mut alpha_float = 1f32;
     // } ;
 
     if let CssColor::RGBA(pp) = income_value.to_rgb() {
@@ -833,10 +1396,73 @@ fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, token_p
         green = pp.green;
         blue = pp.blue;
         alpha = pp.alpha;
+        alpha_float = pp.alpha_f32();
     };
 
-    println!(
-        "[{}] :: r:{}, g:{}, b:{}, a:{}  ",
-        token_prefix, red, green, blue, alpha
+    // println!(
+    //     "[{}] :: r:{}, g:{}, b:{}, a:{}  ",
+    //     token_prefix, red, green, blue, alpha
+    // );
+    if alpha != 255u8 {
+        let op = token_prefix.to_owned() + "-op";
+        tw_set.push_tailwind_token(op.as_str(), (alpha_float * 100f32).round());
+    }
+    let mut resolved_token = search_color(&red, &green, &blue);
+    if resolved_token.len() == 0 {
+        let resolved_raw = income_value
+            .to_css_string(PrinterOptions::default())
+            .unwrap();
+        resolved_token.push(resolved_raw);
+    } else if resolved_token.len() > 1 {
+        let rege = Regex::new(r"^(\w+)-(\d+)").unwrap();
+        resolved_token = resolved_token
+            .into_iter()
+            .filter(|token| rege.is_match(token) == false)
+            .collect();
+    }
+
+    // println!("resolved-token {}", resolved_token.join(" "));
+    tw_set.push_tailwind_token(token_prefix, &resolved_token[0]);
+
+    println!()
+}
+
+fn resolve_percentage_or_number(
+    income_value: &NumberOrPercentage,
+    tw_set: &mut TailwindTokenSet,
+    token_prefix: &str,
+) {
+    match income_value {
+        NumberOrPercentage::Percentage(p) => {
+            let value = (p.0).round() / 100f32;
+            tw_set.push_tailwind_token(token_prefix, &value);
+        }
+        NumberOrPercentage::Number(p) => {
+            tw_set.push_tailwind_token(token_prefix, format!("{:.prec$}", p, prec = 2usize));
+        }
+    }
+}
+
+fn resolve_time(income_value: &Time, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+    let mut time_set = 0f32;
+    match *income_value {
+        Time::Seconds(a) => {
+            time_set = a * 1000f32;
+        }
+        Time::Milliseconds(a) => {
+            time_set = a;
+        }
+    }
+
+    tw_set.push_tailwind_token(token_prefix, time_set.round());
+}
+
+fn resolve_raw_exp<F: ToCss>(income_value: &F, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+    let resolved_raw = income_value
+        .to_css_string(PrinterOptions::default())
+        .unwrap();
+    tw_set.push_tailwind_token(
+        token_prefix,
+        format!("[{}]", resolved_raw.replace(r"[\s|,]", "_")),
     );
 }

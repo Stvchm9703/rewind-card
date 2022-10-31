@@ -11,11 +11,13 @@ use lightningcss::{
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::ops::{Add, Div, Mul, Sub};
 
 // use std::fs;
 pub static mut TAILWIND_TYPOGRAPHY_TOKEN: Vec<TypographyToken> = Vec::new();
 pub static mut TAILWIND_COLOR_TOKEN: Vec<ColorToken> = Vec::new();
 pub static mut TAILWIND_MEDIA_LAYOUT_TOKEN: Vec<MediaToken> = Vec::new();
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TailwindTokenSet {
     is_based: bool,
@@ -90,32 +92,35 @@ pub struct ColorToken {
     pub token_name: String,
     pub token_value: String,
     pub color_set: CssColor,
+    pub color_set_red: u8,
+    pub color_set_green: u8,
+    pub color_set_blue: u8,
 }
 impl ColorToken {
     pub fn get_token(&self) -> String {
         return self.token_name.to_owned();
     }
 
-    pub fn similar_token(&self, input_color: &CssColor) -> bool {
-        // let income_rgb = struct {
-        let mut red = 0u8;
-        let mut green = 0u8;
-        let mut blue = 0u8;
-        let mut alpha = 1u8;
-        // } ;
+    // pub fn similar_token(&self, input_color: &CssColor) -> bool {
+    //     // let income_rgb = struct {
+    //     let mut red = 0f32;
+    //     let mut green = 0f32;
+    //     let mut blue = 0f32;
+    //     let mut alpha = 1f32;
+    //     // } ;
 
-        if let CssColor::RGBA(pp) = input_color.to_rgb() {
-            red = pp.red;
-            green = pp.green;
-            blue = pp.blue;
-            alpha = pp.alpha;
-        };
+    //     if let CssColor::RGBA(pp) = input_color.to_rgb() {
+    //         red = pp.red_f32();
+    //         green = pp.green_f32();
+    //         blue = pp.blue_f32();
+    //         alpha = pp.alpha_f32();
+    //     };
 
-        println!("r:{}, g:{}, b:{}, a:{}  ", red, green, blue, alpha);
+    //     println!("r:{}, g:{}, b:{}, a:{}  ", red, green, blue, alpha);
 
-        // income_rgb.
-        return false;
-    }
+    //     // income_rgb.
+    //     return false;
+    // }
 }
 
 // pub fn similar_token
@@ -157,13 +162,30 @@ pub fn init() {
             token_name: weee.get(0).unwrap().to_owned(),
             token_value: weee.get(1).unwrap().to_owned(),
             color_set: CssColor::CurrentColor,
+            color_set_red: 0u8,
+            color_set_green: 0u8,
+            color_set_blue: 0u8,
         };
         let dummy_color_set = format!("color: {};", color_token_set.token_value);
         let mut css_attr =
             StyleAttribute::parse(&dummy_color_set, ParserOptions::default()).unwrap();
         for t in css_attr.declarations.iter_mut() {
+            // println!("t {}" , t.to_css_string(false, PrinterOptions::default()).unwrap());
+
             if let lightningcss::properties::Property::Color(p) = t {
+                // println!("ccc {}" , p.to_rgb().to_css_string(PrinterOptions::default()).unwrap());
+
                 color_token_set.color_set = p.to_owned();
+                // // println!()
+                // let rgb_set = color_token_set.color_set.to_rgb();
+                if let CssColor::RGBA(_) = p {
+                    let rgb_set = p.to_rgb();
+                    if let CssColor::RGBA(pp) = rgb_set {
+                        color_token_set.color_set_red = pp.red;
+                        color_token_set.color_set_green = pp.green;
+                        color_token_set.color_set_blue = pp.blue;
+                    }
+                }
             }
         }
         unsafe {
@@ -280,4 +302,41 @@ pub fn init() {
     // }
 }
 
-pub fn search_color() {}
+fn in_range(arange: &u8, income_val: &u8) -> bool {
+    let mut lower_val = arange.to_owned();
+    let mut upper_val: u8 = arange.to_owned();
+    if lower_val == 1u8 {
+        lower_val = 0u8;
+    } else if lower_val != 0u8 {
+        lower_val -= 2u8;
+    }
+    if upper_val == 254u8 {
+        upper_val = 255u8;
+    } else if upper_val != 255u8 {
+        upper_val += 2u8;
+    }
+    return (income_val >= &lower_val) && (income_val <= &upper_val);
+}
+
+pub fn search_color(r: &u8, g: &u8, b: &u8) -> Vec<String> {
+    let mut return_set: Vec<String> = vec![];
+    // if income_color
+
+    unsafe {
+        for color_set in &TAILWIND_COLOR_TOKEN {
+            if (&color_set.color_set_red == r)
+                && (&color_set.color_set_blue == b)
+                && (&color_set.color_set_green == g)
+            {
+                return_set.push(color_set.token_name.clone());
+            } else if in_range(&color_set.color_set_red, r)
+                && in_range(&color_set.color_set_blue, b)
+                && in_range(&color_set.color_set_green, g)
+            {
+                return_set.push(color_set.token_name.clone());
+            }
+        }
+    }
+
+    return return_set;
+}
