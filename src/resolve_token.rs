@@ -318,12 +318,18 @@ pub fn resovle_font_set(
                 let (value, unit) = m.to_unit_value();
                 if unit.contains("em") {
                     let tkn = search_font(&value);
+                    for tk in tkn {
+                        tw_set.push_tailwind_token(token_prefix, tk);
+                    }
                 } else if m.to_px().is_some() {
                     let converted = m.to_px().unwrap();
-                    let tkn = search_font(&(converted / 4f32));
+                    let tkn = search_font(&(converted / 16f32));
+                    for tk in tkn {
+                        tw_set.push_tailwind_token(token_prefix, tk);
+                    }
                 } else {
                     let resolved_value = m.to_css_string(PrinterOptions::default()).unwrap();
-                    tw_set.push_tailwind_token(token_prefix, format!("[{}]", resolved_value));
+                    tw_set.push_tailwind_token("text", format!("[{}]", resolved_value));
                 }
             }
         }
@@ -345,9 +351,44 @@ pub fn resovle_line_height_set(
     tw_set: &mut TailwindTokenSet,
     token_prefix: &str,
 ) {
+    fn token_set(n: &f32, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+        if (n >= &1f32) && (n < &1.125f32) {
+            tw_set.push_tailwind_token(token_prefix, "none");
+        } else if (n >= &1.125f32) && (n < &1.3125f32) {
+            tw_set.push_tailwind_token(token_prefix, "tight");
+        } else if (n >= &1.3125f32) && (n < &1.4375f32) {
+            tw_set.push_tailwind_token(token_prefix, "snug");
+        } else if (n >= &1.4375f32) && (n < &1.5625f32) {
+            tw_set.push_tailwind_token(token_prefix, "normal");
+        } else if (n >= &1.5625f32) && (n < &1.8125f32) {
+            tw_set.push_tailwind_token(token_prefix, "relaxed");
+        } else if (n <= &2f32) {
+            tw_set.push_tailwind_token(token_prefix, "loose");
+        }
+    }
     match income_value {
         LineHeight::Normal => {}
-        LineHeight::Number(_) => todo!(),
-        LineHeight::Length(_) => todo!(),
+        LineHeight::Number(n) => {
+            token_set(n, tw_set, token_prefix);
+        }
+        LineHeight::Length(n) => {
+            match n {
+                DimensionPercentage::Dimension(p) => {
+                    let mut rem_value = 1f32;
+                    let (value, unit) = p.to_unit_value();
+                    if unit.contains("em") {
+                        rem_value = value;
+                    } else if p.to_px().is_some() {
+                        rem_value = p.to_px().unwrap() / 16f32;
+                    }
+                    tw_set.push_tailwind_token(token_prefix, (rem_value * 4f32).round());
+                }
+                DimensionPercentage::Percentage(p) => {
+                    token_set(&((p.0).round() / 100f32), tw_set, token_prefix)
+                }
+                // DimensionPercentage::Calc(_) => todo!(),
+                _ => {}
+            }
+        }
     }
 }

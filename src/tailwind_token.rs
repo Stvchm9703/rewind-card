@@ -400,7 +400,8 @@ pub fn search_font(income_value: &f32) -> Vec<String> {
                         let u = d.to_px().unwrap_or_default();
                         rem_value = (u / 16f32).round();
                     }
-                    if in_range_media_query(&rem_value, income_value) {
+                    if &rem_value == income_value {
+                        // println!("fs - {} , income : {}", rem_value, income_value);
                         token.push(media_set.token_name.to_owned());
                     }
                 }
@@ -409,3 +410,40 @@ pub fn search_font(income_value: &f32) -> Vec<String> {
     }
     return token;
 }
+
+
+
+// pub fn search_line_height(income_value: &f32) -> Vec<String> {
+//     let mut token: Vec<String> = Vec::new();
+
+//     unsafe {
+//         for media_set in &TAILWIND_TYPOGRAPHY_TOKEN {
+//             match &media_set.line_height_set {
+//                 LineHeight::Normal => {}
+//                 LineHeight::Number(s) => {
+//                     if s == income_value {
+//                         token.push(media_set.token_name.to_owned());
+//                     }
+//                 }
+//                 LineHeight::Length(s) => {
+//                     if let DimensionPercentage::Dimension(d) = s {
+//                         let mut rem_value = 0f32;
+//                         let (value, unit) = d.to_unit_value();
+//                         if unit.to_lowercase().contains("em") {
+//                             rem_value = value;
+//                         } else if d.to_px().is_some() {
+//                             let u = d.to_px().unwrap_or_default();
+//                             rem_value = (u / 16f32).round();
+//                         }
+//                         if &rem_value == income_value {
+//                             // println!("fs - {} , income : {}", rem_value, income_value);
+//                             token.push(media_set.token_name.to_owned());
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     return token;
+// }

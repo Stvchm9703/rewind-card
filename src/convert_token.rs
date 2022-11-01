@@ -32,6 +32,7 @@ use crate::resolve_token::{
     resolve_time,
     resolve_raw_exp,
     resovle_font_set,
+    resovle_line_height_set,
 };
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
@@ -733,7 +734,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
                 // resolve_keyword(p, tw_set, "font")
             }
-            Property::FontSize(p) => {},
+            Property::FontSize(p) => resovle_font_set(p , tw_set, ""),
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
             Property::FontStyle(p) => match p {
@@ -741,7 +742,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 _ => resolve_keyword(p, tw_set, "font"),
             },
             // Property::FontVariantCaps(_) => todo!(),
-            Property::LineHeight(p) => {},
+            Property::LineHeight(p) => resovle_line_height_set(p , tw_set,"leading"),
             // Property::Font(_) => todo!(),
             // Property::VerticalAlign(_) => todo!(),
             // Property::FontPalette(_) => todo!(),

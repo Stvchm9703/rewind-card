@@ -32,6 +32,14 @@ fn read_css_file(file_path: &Path) {
         let current_layer = file_path.to_str().unwrap().to_string();
         match rule {
             CssRule::Media(m) => {
+              
+                // p.query.
+                let mut mq_token: Vec<String> = vec![];
+                for q in m.query.media_queries {
+                    let ext = resolve_media_query_prefix(q);
+                    mq_token.extend_from_slice(&ext);
+                }
+                
                 for p in m.rules.0 {
                     if let CssRule::Style(s) = p {
                         let mut tw_set = TailwindTokenSet::new();
@@ -40,11 +48,6 @@ fn read_css_file(file_path: &Path) {
                         resolve_style(&s, &mut tw_set);
                         tw_vec.push(tw_set);
                     }
-                }
-                // p.query.
-                let mut mq_token: Vec<String> = vec![];
-                for q in m.query.media_queries {
-                    let ext = resolve_media_query_prefix(q);
                 }
             }
             CssRule::Style(p) => {
@@ -79,7 +82,7 @@ fn read_css_file(file_path: &Path) {
     println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
 }
 
-fn resolve_media_query_prefix(q: MediaQuery) -> String {
+fn resolve_media_query_prefix(q: MediaQuery) -> Vec<String> {
     let mut temp: Vec<String> = vec![];
     let mut resolve_name = String::new();
     if let MediaCondition::Feature(ss) = q.condition.unwrap() {
@@ -103,7 +106,6 @@ fn resolve_media_query_prefix(q: MediaQuery) -> String {
             temp.extend_from_slice(&yyy);
         }
     }
-    
 
-    return temp.join(", ");
+    return temp;
 }
