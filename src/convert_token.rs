@@ -15,7 +15,7 @@ use lightningcss::{
     traits::ToCss,
    
 };
-// use regex::Regex;
+use regex::Regex;
 
 use crate::tailwind_token::{ TailwindTokenSet};
 
@@ -31,8 +31,8 @@ use crate::resolve_token::{
     resolve_percentage_or_number,
     resolve_time,
     resolve_raw_exp,
-    resovle_font_set,
-    resovle_line_height_set,
+    resolve_font_set,
+    resolve_line_height_set,
 };
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
@@ -278,9 +278,9 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_border_side_width(&p.end, tw_set, "b-r");
             }
             Property::Border(p) => {
-                resolve_keyword(&p.style, tw_set, "b-a");
-                resolve_border_side_width(&p.width, tw_set, "b-a");
-                resolve_color(&p.color, tw_set, "b-a");
+                resolve_keyword(&p.style, tw_set, "b");
+                resolve_border_side_width(&p.width, tw_set, "b");
+                resolve_color(&p.color, tw_set, "b");
             }
             Property::BorderTop(p) => {
                 resolve_keyword(&p.style, tw_set, "b-t");
@@ -734,7 +734,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 }
                 // resolve_keyword(p, tw_set, "font")
             }
-            Property::FontSize(p) => resovle_font_set(p , tw_set, ""),
+            Property::FontSize(p) => resolve_font_set(p , tw_set, ""),
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
             Property::FontStyle(p) => match p {
@@ -742,7 +742,7 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 _ => resolve_keyword(p, tw_set, "font"),
             },
             // Property::FontVariantCaps(_) => todo!(),
-            Property::LineHeight(p) => resovle_line_height_set(p , tw_set,"leading"),
+            Property::LineHeight(p) => resolve_line_height_set(p , tw_set,"leading"),
             // Property::Font(_) => todo!(),
             // Property::VerticalAlign(_) => todo!(),
             // Property::FontPalette(_) => todo!(),

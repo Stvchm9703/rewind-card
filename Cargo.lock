@@ -295,6 +295,7 @@ dependencies = [
  "grass",
  "lightningcss",
  "num",
+ "parcel_selectors",
  "regex",
  "serde",
  "serde_json",

@@ -1,18 +1,17 @@
 // use std::fmt::Format;
 use csv;
 use lightningcss::{
-    media_query::{MediaCondition, MediaFeature, MediaQuery},
+    // media_query::{MediaCondition, MediaFeature, MediaQuery},
     properties::font::{FontSize, LineHeight},
     stylesheet::StyleAttribute,
-    stylesheet::{ParserOptions, PrinterOptions},
-    traits::ToCss,
+    stylesheet::{ParserOptions},
+    // traits::ToCss,
     values::color::CssColor,
     values::length::{Length, LengthValue},
     values::percentage::DimensionPercentage,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, Div, Mul, Sub};
 
 // use std::fs;
 pub static mut TAILWIND_TYPOGRAPHY_TOKEN: Vec<TypographyToken> = Vec::new();
@@ -27,7 +26,7 @@ pub struct TailwindTokenSet {
     pub tailwind_token: Vec<String>,
     pub layer_group: String,
     pub media_query: Vec<String>,
-    pub media_qurey_prefix: Vec<String>,
+    pub media_query_prefix: Vec<String>,
     pub raw_property: String,
 }
 impl TailwindTokenSet {
@@ -38,7 +37,7 @@ impl TailwindTokenSet {
             tailwind_token: Vec::new(),
             layer_group: String::new(),
             media_query: Vec::new(),
-            media_qurey_prefix: Vec::new(),
+            media_query_prefix: Vec::new(),
             raw_property: String::new(),
         }
     }
@@ -49,19 +48,15 @@ impl TailwindTokenSet {
     pub fn push_involved_classname(&mut self, income_str: &str) {
         self.involved_classnames.push(income_str.to_owned());
     }
-    pub fn push_involved_classnames(&mut self, income_arr: Vec<&str>) {
-        for t in income_arr {
-            self.involved_classnames.push(t.to_owned());
-        }
+    pub fn push_involved_classnames(&mut self, income_arr: Vec<String>) {
+        self.involved_classnames.extend_from_slice(&income_arr);
     }
 
     pub fn push_media_query(&mut self, income_str: String) {
         self.media_query.push(income_str);
     }
-    pub fn push_media_queries(&mut self, income_arr: Vec<&str>) {
-        for t in income_arr {
-            self.media_query.push(t.to_owned());
-        }
+    pub fn push_media_queries(&mut self, income_arr: &Vec<String>) {
+        self.media_query.extend_from_slice(income_arr)
     }
     pub fn push_tailwind_token<F: ToString>(&mut self, property_name: &str, property_value: F) {
         if property_name != "" {
@@ -137,14 +132,14 @@ pub struct TypographyToken {
     pub line_height_set: LineHeight,
 }
 
-impl TypographyToken {
-    fn get_token(&self) -> String {
-        return self.token_name.to_owned();
-    }
-    fn match_token(&self, input_font_size: &str) -> bool {
-        self.font_size.eq(input_font_size)
-    }
-}
+// impl TypographyToken {
+//     fn get_token(&self) -> String {
+//         return self.token_name.to_owned();
+//     }
+//     fn match_token(&self, input_font_size: &str) -> bool {
+//         self.font_size.eq(input_font_size)
+//     }
+// }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MediaToken {
@@ -160,10 +155,10 @@ pub fn init() {
 
     let mut csv_color_token = csv::Reader::from_path("./preset/color-token.csv").unwrap();
     for record in csv_color_token.records() {
-        let weee = record.unwrap();
+        let raw_record = record.unwrap();
         let mut color_token_set: ColorToken = ColorToken {
-            token_name: weee.get(0).unwrap().to_owned(),
-            token_value: weee.get(1).unwrap().to_owned(),
+            token_name: raw_record.get(0).unwrap().to_owned(),
+            token_value: raw_record.get(1).unwrap().to_owned(),
             color_set: CssColor::CurrentColor,
             color_set_red: 0u8,
             color_set_green: 0u8,
@@ -198,11 +193,11 @@ pub fn init() {
 
     let mut csv_typography_token = csv::Reader::from_path("./preset/typography-token.csv").unwrap();
     for record in csv_typography_token.records() {
-        let weee = record.unwrap();
+        let raw_record = record.unwrap();
         let mut type_token_set: TypographyToken = TypographyToken {
-            token_name: weee.get(0).unwrap().to_owned(),
-            font_size: weee.get(1).unwrap().to_owned(),
-            line_height: weee.get(2).unwrap().to_owned(),
+            token_name: raw_record.get(0).unwrap().to_owned(),
+            font_size: raw_record.get(1).unwrap().to_owned(),
+            line_height: raw_record.get(2).unwrap().to_owned(),
             font_size_set: FontSize::Relative(
                 lightningcss::properties::font::RelativeFontSize::Larger,
             ),
@@ -232,11 +227,11 @@ pub fn init() {
 
     let mut csv_media_query_token = csv::Reader::from_path("./preset/media-query.csv").unwrap();
     for record in csv_media_query_token.records() {
-        let weee = record.unwrap().clone();
+        let raw_record = record.unwrap().clone();
         let mut token_set: MediaToken = MediaToken {
-            token_name: weee.get(0).unwrap().to_owned(),
-            min_width_string: weee.get(1).unwrap().to_string(),
-            max_width_string: weee.get(2).unwrap().to_string(),
+            token_name: raw_record.get(0).unwrap().to_owned(),
+            min_width_string: raw_record.get(1).unwrap().to_string(),
+            max_width_string: raw_record.get(2).unwrap().to_string(),
             min_width: None,
             max_width: None,
         };
@@ -304,9 +299,9 @@ pub fn init() {
     // }
 }
 
-fn in_range(arange: &u8, income_val: &u8) -> bool {
-    let mut lower_val = arange.to_owned();
-    let mut upper_val: u8 = arange.to_owned();
+fn in_range(a_range: &u8, income_val: &u8) -> bool {
+    let mut lower_val = a_range.to_owned();
+    let mut upper_val: u8 = a_range.to_owned();
     if lower_val == 1u8 {
         lower_val = 0u8;
     } else if lower_val != 0u8 {
@@ -343,9 +338,9 @@ pub fn search_color(r: &u8, g: &u8, b: &u8) -> Vec<String> {
     return return_set;
 }
 
-fn in_range_media_query(arange: &f32, income_val: &f32) -> bool {
-    let mut lower_val = arange.to_owned();
-    let mut upper_val: f32 = arange.to_owned();
+fn in_range_media_query(a_range: &f32, income_val: &f32) -> bool {
+    let mut lower_val = a_range.to_owned();
+    let mut upper_val: f32 = a_range.to_owned();
     if lower_val == 1f32 {
         lower_val = 0f32;
     } else if lower_val != 0f32 {
@@ -410,40 +405,3 @@ pub fn search_font(income_value: &f32) -> Vec<String> {
     }
     return token;
 }
-
-
-
-// pub fn search_line_height(income_value: &f32) -> Vec<String> {
-//     let mut token: Vec<String> = Vec::new();
-
-//     unsafe {
-//         for media_set in &TAILWIND_TYPOGRAPHY_TOKEN {
-//             match &media_set.line_height_set {
-//                 LineHeight::Normal => {}
-//                 LineHeight::Number(s) => {
-//                     if s == income_value {
-//                         token.push(media_set.token_name.to_owned());
-//                     }
-//                 }
-//                 LineHeight::Length(s) => {
-//                     if let DimensionPercentage::Dimension(d) = s {
-//                         let mut rem_value = 0f32;
-//                         let (value, unit) = d.to_unit_value();
-//                         if unit.to_lowercase().contains("em") {
-//                             rem_value = value;
-//                         } else if d.to_px().is_some() {
-//                             let u = d.to_px().unwrap_or_default();
-//                             rem_value = (u / 16f32).round();
-//                         }
-//                         if &rem_value == income_value {
-//                             // println!("fs - {} , income : {}", rem_value, income_value);
-//                             token.push(media_set.token_name.to_owned());
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-
-//     return token;
-// }

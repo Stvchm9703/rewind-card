@@ -1,10 +1,12 @@
 use lightningcss::{
+    media_query::{MediaCondition, MediaFeature, MediaFeatureValue, MediaQuery},
     properties::{
         border::BorderSideWidth,
         font::{AbsoluteFontSize, FontSize, LineHeight},
         grid,
         size::{MaxSize, Size},
     },
+
     // rules::{style::StyleRule, CssRule},
     stylesheet::PrinterOptions,
     traits::ToCss,
@@ -15,9 +17,11 @@ use lightningcss::{
         time::Time,
     },
 };
+// use parcel_selectors::SelectorList;
+
 use regex::Regex;
 
-use crate::tailwind_token::{search_color, search_font, TailwindTokenSet};
+use crate::tailwind_token::{search_color, search_font, search_media, TailwindTokenSet};
 
 pub fn resolve_track_size(
     income_value: &grid::TrackSize,
@@ -26,20 +30,16 @@ pub fn resolve_track_size(
 ) {
     match income_value {
         grid::TrackSize::TrackBreadth(k) => match k {
-            lightningcss::properties::grid::TrackBreadth::Flex(k) => {
-                tw_set.push_tailwind_token(token_prefix, k)
-            }
-            lightningcss::properties::grid::TrackBreadth::Length(k) => {
-                resolve_dimension(k, tw_set, token_prefix)
-            }
-            lightningcss::properties::grid::TrackBreadth::MinContent => {
+            grid::TrackBreadth::Flex(k) => tw_set.push_tailwind_token(token_prefix, k),
+            grid::TrackBreadth::Length(k) => resolve_dimension(k, tw_set, token_prefix),
+            grid::TrackBreadth::MinContent => {
                 tw_set.push_tailwind_token(token_prefix, "min");
             }
 
-            lightningcss::properties::grid::TrackBreadth::MaxContent => {
+            grid::TrackBreadth::MaxContent => {
                 tw_set.push_tailwind_token(token_prefix, "max");
             }
-            lightningcss::properties::grid::TrackBreadth::Auto => {
+            grid::TrackBreadth::Auto => {
                 tw_set.push_tailwind_token(token_prefix, "auto");
             }
         },
@@ -170,7 +170,13 @@ pub fn resolve_keyword<F: ToCss>(
     tw_set.push_tailwind_token(
         token_prefix,
         income_value
-            .to_css_string(PrinterOptions::default())
+            .to_css_string(PrinterOptions {
+                minify: false,
+                source_map: None,
+                targets: None,
+                analyze_dependencies: None,
+                pseudo_classes: None,
+            })
             .unwrap(),
     );
 }
@@ -260,7 +266,7 @@ pub fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, tok
     // println!("resolved-token {}", resolved_token.join(" "));
     tw_set.push_tailwind_token(token_prefix, &resolved_token[0]);
 
-    println!()
+    // println!()
 }
 
 pub fn resolve_percentage_or_number(
@@ -280,6 +286,7 @@ pub fn resolve_percentage_or_number(
 }
 
 pub fn resolve_time(income_value: &Time, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
+    #[warn(unused_assignments)]
     let mut time_set = 0f32;
     match *income_value {
         Time::Seconds(a) => {
@@ -307,7 +314,7 @@ pub fn resolve_raw_exp<F: ToCss>(
     );
 }
 
-pub fn resovle_font_set(
+pub fn resolve_font_set(
     income_value: &FontSize,
     tw_set: &mut TailwindTokenSet,
     token_prefix: &str,
@@ -342,11 +349,11 @@ pub fn resovle_font_set(
             AbsoluteFontSize::XLarge => tw_set.push_tailwind_token(token_prefix, "xl"),
             AbsoluteFontSize::XXLarge => tw_set.push_tailwind_token(token_prefix, "2xl"),
         },
-        FontSize::Relative(s) => {}
+        FontSize::Relative(_) => {}
     }
 }
 
-pub fn resovle_line_height_set(
+pub fn resolve_line_height_set(
     income_value: &LineHeight,
     tw_set: &mut TailwindTokenSet,
     token_prefix: &str,
@@ -362,7 +369,7 @@ pub fn resovle_line_height_set(
             tw_set.push_tailwind_token(token_prefix, "normal");
         } else if (n >= &1.5625f32) && (n < &1.8125f32) {
             tw_set.push_tailwind_token(token_prefix, "relaxed");
-        } else if (n <= &2f32) {
+        } else if n <= &2f32 {
             tw_set.push_tailwind_token(token_prefix, "loose");
         }
     }
@@ -391,4 +398,34 @@ pub fn resovle_line_height_set(
             }
         }
     }
+}
+
+pub fn resolve_media_query_prefix(q: MediaQuery) -> Vec<String> {
+    let mut temp: Vec<String> = vec![];
+    #[warn(unused_assignments)]
+    let mut resolve_name = String::new();
+    if let MediaCondition::Feature(ss) = q.condition.unwrap() {
+        if let MediaFeature::Plain { name, value } = ss {
+            resolve_name = name.to_string();
+            let mut rem_value = -1f32;
+            if let MediaFeatureValue::Length(qwe) = value {
+                if let lightningcss::values::length::Length::Value(v) = qwe {
+                    // let u = v.to_px();
+                    let (vv, unit) = v.to_unit_value();
+                    // println!("vv {} , unit {}", vv, unit);
+                    if unit.to_lowercase().contains("em") {
+                        rem_value = vv;
+                    } else {
+                        let u = v.to_px().unwrap_or_default();
+                        rem_value = (u / 16f32).round();
+                    }
+                }
+            }
+            let yyy = search_media(&resolve_name, &rem_value);
+            temp.extend_from_slice(&yyy);
+        }
+    }
+    // #todo : resolve the extra token
+
+    return temp;
 }
