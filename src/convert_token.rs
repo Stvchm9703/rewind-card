@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use lightningcss::{
     properties::{
         effects::Filter,
@@ -5,7 +6,7 @@ use lightningcss::{
         grid,
         font,
         transform,
-        effects,
+        effects, contain, PropertyId,
     },
     values::{
         easing,
@@ -15,7 +16,7 @@ use lightningcss::{
     traits::ToCss,
    
 };
-use regex::Regex;
+// use regex::Regex;
 
 use crate::tailwind_token::{ TailwindTokenSet};
 
@@ -35,9 +36,22 @@ use crate::resolve_token::{
     resolve_line_height_set,
 };
 
+// lazy_static!{
+// pub static ref GLOBAL_PROPERTY_VALUE : Vec<&'static str> = vec![
+//    &raw_property_value ==  "inherit" ||
+//    &raw_property_value ==  "initial" ||
+//    &raw_property_value ==  "revert" ||
+//    &raw_property_value ==  "revert-layer" || 
+//    &raw_property_value ==  "unset"
+// ];
+// }
+
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
     for prop in &rule.declarations.declarations {
         // prop.value_to_css_string(PrinterOptions::default());
+
+       
+       
         match prop {
             Property::BackgroundColor(p) => resolve_color(p, tw_set, "bg"),
             // Property::BackgroundImage(_) => todo!(),
@@ -1193,10 +1207,18 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             // Property::ContainerType(_) => todo!(),
             // Property::ContainerName(_) => todo!(),
             // Property::Container(_) => todo!(),
-            // Property::Unparsed(_) => todo!(),
+            Property::Unparsed(p) => {
+                let raw_property_value: String = prop.value_to_css_string(PrinterOptions::default()).unwrap();
+                if (&raw_property_value == "inherit") || (&raw_property_value ==  "initial") || (&raw_property_value ==  "revert") || (&raw_property_value ==  "revert-layer") || (&raw_property_value ==  "unset") || (&raw_property_value ==  "none") { 
+                    tw_set.push_tailwind_token(p.property_id.name(), &raw_property_value);
+                }
+            },
             // Property::Custom(_) => todo!(),
             _ => {}
         }
+        
     }
 }
+
+
 

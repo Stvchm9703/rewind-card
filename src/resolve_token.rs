@@ -84,11 +84,11 @@ pub fn resolve_dimension(
             };
 
             if pxv.eq("") {
-                let (vall, unit) = value.to_unit_value();
+                let (number_value, unit) = value.to_unit_value();
                 if unit.to_lowercase().contains("em") {
-                    pxv = format!("{}", (vall * 4f32).round());
+                    pxv = format!("{}", (number_value * 4f32).round());
                 } else {
-                    pxv = format!("{}{}", vall, unit)
+                    pxv = format!("{}{}", number_value, unit)
                 }
             }
 
@@ -201,11 +201,11 @@ pub fn resolve_border_side_width(
                 };
 
                 if pxv.eq("") {
-                    let (vall, unit) = value.to_unit_value();
+                    let (number_value, unit) = value.to_unit_value();
                     if unit.to_lowercase().contains("em") {
-                        pxv = format!("{}", (vall * 4f32).round());
+                        pxv = format!("{}", (number_value * 4f32).round());
                     } else {
-                        pxv = format!("{}{}", vall, unit)
+                        pxv = format!("{}{}", number_value, unit)
                     }
                 }
 
@@ -256,10 +256,10 @@ pub fn resolve_color(income_value: &CssColor, tw_set: &mut TailwindTokenSet, tok
             .unwrap();
         resolved_token.push(resolved_raw);
     } else if resolved_token.len() > 1 {
-        let rege = Regex::new(r"^(\w+)-(\d+)").unwrap();
+        let regex_set = Regex::new(r"^(\w+)-(\d+)").unwrap();
         resolved_token = resolved_token
             .into_iter()
-            .filter(|token| rege.is_match(token) == false)
+            .filter(|token| regex_set.is_match(token) == false)
             .collect();
     }
 
@@ -280,7 +280,7 @@ pub fn resolve_percentage_or_number(
             tw_set.push_tailwind_token(token_prefix, &value);
         }
         NumberOrPercentage::Number(p) => {
-            tw_set.push_tailwind_token(token_prefix, format!("{:.prec$}", p, prec = 2usize));
+            tw_set.push_tailwind_token(token_prefix, format!("{:.rounded$}", p, rounded = 2usize));
         }
     }
 }

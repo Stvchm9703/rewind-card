@@ -1,10 +1,11 @@
 // use std::fmt::Format;
 use csv;
+use lazy_static::lazy_static;
 use lightningcss::{
     // media_query::{MediaCondition, MediaFeature, MediaQuery},
     properties::font::{FontSize, LineHeight},
+    stylesheet::ParserOptions,
     stylesheet::StyleAttribute,
-    stylesheet::{ParserOptions},
     // traits::ToCss,
     values::color::CssColor,
     values::length::{Length, LengthValue},
@@ -12,7 +13,9 @@ use lightningcss::{
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-
+lazy_static! {
+    pub static ref PROPETY_SET: Regex = Regex::new(r"([\w|\-]+):([\s|-|#|(|)|$|\d|\w]+);").unwrap();
+}
 // use std::fs;
 pub static mut TAILWIND_TYPOGRAPHY_TOKEN: Vec<TypographyToken> = Vec::new();
 pub static mut TAILWIND_COLOR_TOKEN: Vec<ColorToken> = Vec::new();
@@ -28,6 +31,7 @@ pub struct TailwindTokenSet {
     pub media_query: Vec<String>,
     pub media_query_prefix: Vec<String>,
     pub raw_property: String,
+    pub raw_property_count: i32,
 }
 impl TailwindTokenSet {
     pub fn new() -> TailwindTokenSet {
@@ -39,6 +43,7 @@ impl TailwindTokenSet {
             media_query: Vec::new(),
             media_query_prefix: Vec::new(),
             raw_property: String::new(),
+            raw_property_count: 0i32,
         }
     }
 
@@ -59,15 +64,28 @@ impl TailwindTokenSet {
         self.media_query.extend_from_slice(income_arr)
     }
     pub fn push_tailwind_token<F: ToString>(&mut self, property_name: &str, property_value: F) {
+        let mut combind_token: String = property_value.to_string();
+        let mut existed: Option<usize> = None;
+
         if property_name != "" {
-            self.tailwind_token
-                .push(format!("{}-{}", property_name, property_value.to_string()));
-        } else {
-            self.tailwind_token.push(property_value.to_string());
+            combind_token = property_name.to_owned() + "-" + &combind_token;
+            existed = self
+                .tailwind_token
+                .iter()
+                .position(|r| r.starts_with(property_name));
+            // .position(|r| r.starts_with(&(property_name.to_string() + "-")) );
         }
+        if let Some(existed_index) = existed {
+            self.tailwind_token.swap_remove(existed_index);
+        }
+
+        self.tailwind_token.push(combind_token);
     }
     pub fn set_raw_property(&mut self, income_str: &str) {
         self.raw_property = income_str.to_owned();
+    }
+    pub fn set_raw_property_count(&mut self, income: i32) {
+        self.raw_property_count = income;
     }
 
     pub fn export_token() -> Vec<String> {

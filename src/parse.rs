@@ -33,14 +33,14 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                     let ext = resolve_media_query_prefix(q);
                     mq_token.extend_from_slice(&ext);
                 }
-
+                let sub_property_count = m.rules.0.len() as i32;
                 for p in m.rules.0 {
                     if let CssRule::Style(s) = p {
                         let mut tw_set = TailwindTokenSet::new();
                         tw_set.push_involved_classnames(
                             s.selectors
                                 .to_string()
-                                .split(",")
+                                .split(", ")
                                 .map(|f| f.to_owned())
                                 .collect(),
                         );
@@ -48,6 +48,7 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                         tw_set.set_raw_property(&current_rule);
                         resolve_style(&s, &mut tw_set);
                         tw_set.push_media_queries(&mq_token);
+                        tw_set.set_raw_property_count(sub_property_count);
                         tw_vec.push(tw_set);
                     }
                 }
@@ -57,13 +58,16 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                 tw_set.push_involved_classnames(
                     p.selectors
                         .to_string()
-                        .split(",")
+                        .split(", ")
                         .map(|f| f.to_owned())
                         .collect(),
                 );
                 tw_set.set_layer_group(&current_layer);
                 tw_set.set_raw_property(&current_rule);
+                let property_count = p.declarations.declarations.len() as i32;
+                tw_set.set_raw_property_count(property_count);
                 resolve_style(&p, &mut tw_set);
+
                 tw_vec.push(tw_set);
             }
             // CssRule::Import(_) => todo!(),
