@@ -4,7 +4,7 @@ use crate::tailwind_token::TailwindTokenSet;
 use lightningcss::{
     rules::CssRule,
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
-    traits::ToCss,
+    traits::ToCss, properties::Property,
 };
 // use serde_json;
 
@@ -66,6 +66,7 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                 tw_set.set_raw_property(&current_rule);
                 let property_count = p.declarations.declarations.len() as i32;
                 tw_set.set_raw_property_count(property_count);
+                // let style_rule:Vec<Property> = p.declarations.declarations.iter().collect();
                 resolve_style(&p, &mut tw_set);
 
                 tw_vec.push(tw_set);

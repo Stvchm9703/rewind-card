@@ -47,7 +47,10 @@ use crate::resolve_token::{
 // }
 
 pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
-    for prop in &rule.declarations.declarations {
+    let mut handle_slice: Vec<Property> = rule.declarations.declarations.clone();
+    handle_slice.reverse();
+    handle_slice.dedup_by_key(|a| a.property_id());
+    for prop in &handle_slice {
         // prop.value_to_css_string(PrinterOptions::default());
 
        
