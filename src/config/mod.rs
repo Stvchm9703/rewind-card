@@ -160,7 +160,8 @@ impl TailwindConfigSet {
         }
     }
     pub fn from_json_string() -> TailwindConfigSet {
-        TailwindConfigSet{}
+        return TailwindConfigSet::default();
+        // TailwindConfigSet{}
     }
 }
 

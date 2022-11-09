@@ -57,7 +57,7 @@ pub fn resolve_length_length_percentage_or_auto(
 ) {
     match income_value {
         LengthPercentageOrAuto::Auto => {
-            tw_set.push_tailwind_token(token_prefix, "auto");
+            tw_set.push_tailwind_token_with_check(token_prefix, "auto");
         }
         LengthPercentageOrAuto::LengthPercentage(a) => {
             resolve_dimension(a, tw_set, token_prefix);
@@ -92,17 +92,17 @@ pub fn resolve_dimension(
                 }
             }
 
-            tw_set.push_tailwind_token(token_prefix, pxv);
+            tw_set.push_tailwind_token_with_check(token_prefix, pxv);
         }
         DimensionPercentage::Percentage(percentage_val) => {
-            tw_set.push_tailwind_token(
+            tw_set.push_tailwind_token_with_check(
                 token_prefix,
                 percentage_val
                     .to_css_string(PrinterOptions::default())
                     .unwrap(),
             );
         }
-        DimensionPercentage::Calc(s) => tw_set.push_tailwind_token(
+        DimensionPercentage::Calc(s) => tw_set.push_tailwind_token_with_check(
             token_prefix,
             format!("[{}]", s.to_css_string(PrinterOptions::default()).unwrap()),
         ),

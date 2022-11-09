@@ -65,6 +65,29 @@ impl TailwindTokenSet {
     }
     pub fn push_tailwind_token<F: ToString>(&mut self, property_name: &str, property_value: F) {
         let mut combind_token: String = property_value.to_string();
+        // let mut existed: Option<usize> = None;
+
+        if property_name != "" {
+            combind_token = property_name.to_owned() + "-" + &combind_token;
+            // existed = self
+            //     .tailwind_token
+            //     .iter()
+            //     .position(|r| r.starts_with(property_name));
+        }
+        // if should_check == true {
+        //     if let Some(existed_index) = existed {
+        //         self.tailwind_token.swap_remove(existed_index);
+        //     }
+        // }
+
+        self.tailwind_token.push(combind_token);
+    }
+    pub fn push_tailwind_token_with_check<F: ToString>(
+        &mut self,
+        property_name: &str,
+        property_value: F,
+    ) {
+        let mut combind_token: String = property_value.to_string();
         let mut existed: Option<usize> = None;
 
         if property_name != "" {
@@ -73,7 +96,6 @@ impl TailwindTokenSet {
                 .tailwind_token
                 .iter()
                 .position(|r| r.starts_with(property_name));
-            // .position(|r| r.starts_with(&(property_name.to_string() + "-")) );
         }
         if let Some(existed_index) = existed {
             self.tailwind_token.swap_remove(existed_index);

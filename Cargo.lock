@@ -297,6 +297,7 @@ dependencies = [
  "lightningcss",
  "num",
  "parcel_selectors",
+ "rayon",
  "regex",
  "serde",
  "serde_json",
