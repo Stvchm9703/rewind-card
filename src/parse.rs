@@ -4,7 +4,8 @@ use crate::tailwind_token::TailwindTokenSet;
 use lightningcss::{
     rules::CssRule,
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
-    traits::ToCss, properties::Property,
+    traits::ToCss, 
+    // properties::Property,
 };
 // use serde_json;
 

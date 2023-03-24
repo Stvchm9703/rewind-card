@@ -6,8 +6,12 @@ pub mod tailwind_token;
 // use serde_json;
 use crate::parse::parse_to_tw_token;
 use rayon::prelude::*;
-use serde_json::{Result, Value};
-use std::{collections::HashMap, fs, path::Path};
+// use serde_json::{Result, Value};
+use std::{
+    // collections::HashMap,
+    fs,
+    path::Path,
+};
 
 fn main() {
     tailwind_token::init();
