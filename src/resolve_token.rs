@@ -43,7 +43,7 @@ pub fn resolve_track_size(
                 tw_set.push_tailwind_token(token_prefix, "auto");
             }
         },
-        grid::TrackSize::MinMax(_, _) => resolve_raw_exp(income_value, tw_set, token_prefix),
+        grid::TrackSize::MinMax { min, max } => resolve_raw_exp(income_value, tw_set, token_prefix),
         grid::TrackSize::FitContent(_) => {
             tw_set.push_tailwind_token(token_prefix, "[fit-content]");
         }
@@ -171,6 +171,7 @@ pub fn resolve_keyword<F: ToCss>(
         token_prefix,
         income_value
             .to_css_string(PrinterOptions {
+                project_root: None,
                 minify: false,
                 source_map: None,
                 targets: None,

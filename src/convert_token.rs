@@ -1,4 +1,3 @@
-use lazy_static::lazy_static;
 use lightningcss::{
     properties::{
         effects::Filter,
@@ -6,10 +5,10 @@ use lightningcss::{
         grid,
         font,
         transform,
-        effects, contain, PropertyId,
+        effects,
     },
     values::{
-        easing,
+        easing::EasingFunction,
     },
     rules::{style::StyleRule },
     stylesheet::{ PrinterOptions},
@@ -796,8 +795,8 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::TransitionTimingFunction(p, _) => {
                 for q in p {
                     // resolve_time(q, tw_set, "delay");
-                    match *q {
-                        easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                    match q {
+                         EasingFunction::CubicBezier { x1, y1, x2, y2 }  => {
                             // /**
                             // standard: {
                             //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
@@ -813,31 +812,31 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             // },
                             //  */
 
-                            if (a == 0.2f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                            if (x1 == &0.2f32) && (y1 == &0f32) && (x2 == &0.38f32) && ( y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "standard-productive");
                             }
-                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 0.3f32) && (d == 1f32) {
+                            else if (x1 == &0.4f32) && (y1 == &0.14f32) && (x2 == &0.3f32) && (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "standard-expressive");
                             }
-                            else if (a == 0f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                            else if (x1 == &0f32) && (y1 == &0f32) && (x2 == &0.38f32) && (y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "entrance-productive");
                             }
-                            else if (a == 0f32) && (b == 0f32) && (c == 0.3f32 )&& (d == 1f32) {
+                            else if (x1 == &0f32) && (y1 == &0f32) && (x2 == &0.3f32 )&& (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "entrance-expressive");
                             }  
-                            else if (a == 0.2f32) && (b == 0f32) && (c == 1f32) && (d == 0.9f32) {
+                            else if (x1 == &0.2f32) && (y1 == &0f32) && (x2 == &1f32) && (y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "exit-productive");
                             }
-                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 1f32) && (d == 1f32) {
+                            else if (x1 == &0.4f32) && (y1 == &0.14f32) && (x2 == &1f32) && (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "exit-expressive");
                             } 
                             else {
-                                tw_set.push_tailwind_token("ease", "exit-expressive");
+                                tw_set.push_tailwind_token("ease", format!("[cubic-bezier:{}_{}_{}_{}]" , x1,y1,x2,y2));
                             } 
                             
                         },
-                        easing::EasingFunction::Steps(_, _) => {},
-                        easing::EasingFunction::Linear => {
+                        EasingFunction::Steps { count, position }  => {},
+                        EasingFunction::Linear => {
                             tw_set.push_tailwind_token("ease", "linear");
                         },
                         _ => {
@@ -854,8 +853,8 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 for q in p {
                     resolve_time(&q.delay, tw_set, "delay");
                     resolve_time(&q.duration, tw_set, "duration");
-                    match q.timing_function {
-                        easing::EasingFunction::CubicBezier(a, b, c, d) => {
+                    match &q.timing_function {
+                        EasingFunction::CubicBezier { x1, y1, x2, y2 }  => {
                             // /**
                             // standard: {
                             //     productive: 'cubic-bezier(0.2, 0, 0.38, 0.9)',
@@ -871,31 +870,31 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             // },
                             //  */
 
-                            if (a == 0.2f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                             if (x1 == &0.2f32) && (y1 == &0f32) && (x2 == &0.38f32) && ( y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "standard-productive");
                             }
-                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 0.3f32) && (d == 1f32) {
+                            else if (x1 == &0.4f32) && (y1 == &0.14f32) && (x2 == &0.3f32) && (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "standard-expressive");
                             }
-                            else if (a == 0f32) && (b == 0f32) && (c == 0.38f32) && (d == 0.9f32) {
+                            else if (x1 == &0f32) && (y1 == &0f32) && (x2 == &0.38f32) && (y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "entrance-productive");
                             }
-                            else if (a == 0f32) && (b == 0f32) && (c == 0.3f32 )&& (d == 1f32) {
+                            else if (x1 == &0f32) && (y1 == &0f32) && (x2 == &0.3f32 )&& (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "entrance-expressive");
                             }  
-                            else if (a == 0.2f32) && (b == 0f32) && (c == 1f32) && (d == 0.9f32) {
+                            else if (x1 == &0.2f32) && (y1 == &0f32) && (x2 == &1f32) && (y2 == &0.9f32) {
                                 tw_set.push_tailwind_token("ease", "exit-productive");
                             }
-                            else if (a == 0.4f32) && (b == 0.14f32) && (c == 1f32) && (d == 1f32) {
+                            else if (x1 == &0.4f32) && (y1 == &0.14f32) && (x2 == &1f32) && (y2 == &1f32) {
                                 tw_set.push_tailwind_token("ease", "exit-expressive");
                             } 
                             else {
-                                tw_set.push_tailwind_token("ease", format!("[cubic-bezier:{}_{}_{}_{}]" , a,b,c,d));
+                                tw_set.push_tailwind_token("ease", format!("[cubic-bezier:{}_{}_{}_{}]" , x1,y1,x2,y2));
                             } 
                             
                         },
-                        easing::EasingFunction::Steps(_, _) => {},
-                        easing::EasingFunction::Linear => {
+                        EasingFunction::Steps { count, position }  => {},
+                        EasingFunction::Linear => {
                             tw_set.push_tailwind_token("ease", "linear");
                         },
                         _ => {
