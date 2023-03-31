@@ -32,16 +32,12 @@ fn main() {
         .collect::<Vec<_>>();
 
     file_list.par_iter().for_each(|entry| {
-        // if let Ok(entry) = entry {
-        // println!("{:?}", entry.path());
-        // if let Ok(file_type) = entry.file_type() {
-        //     if file_type.is_file() && entry.path().extension().is_some_and(|&f| f.to_str().contains("scss")) {
-
-        //     }
-        // }
-        // let mut income_src = Path::new("./input-src/cdt-grid-card.css");
         let file_name = entry.file_name().unwrap_or_default();
         let file_context = fs::read_to_string(&entry).unwrap();
+
+        if entry.extension().unwrap() == "scss" || entry.extension().unwrap() == "scss" {
+            
+        }
         let resolved_token = parse_to_tw_token(&file_context, &file_name.to_str().unwrap());
         let outpath = outcome_src_dir
             .join("s")

@@ -30,7 +30,11 @@ pub struct TailwindTokenSet {
     pub layer_group: String,
     pub media_query: Vec<String>,
     pub media_query_prefix: Vec<String>,
+
+    /// raw_property_count : for debug the count of css attrubutes / property
     pub raw_property: String,
+
+    /// raw_property_count : for debug the count of css attrubutes / property
     pub raw_property_count: i32,
 }
 impl TailwindTokenSet {
@@ -280,6 +284,7 @@ pub fn init() {
         let re = Regex::new(r"(?P<number_value>[\d|.]+)(?P<unit>\w+)$").unwrap();
 
         let mut min_width_value = Length::Value(LengthValue::Rem(0f32));
+       
         if &token_set.min_width_string != "" {
             let ssss = re.captures(&token_set.min_width_string).unwrap();
             let num = ssss
@@ -319,7 +324,7 @@ pub fn init() {
             }
             token_set.max_width = Some(max_width_value);
         }
-
+        // println!("{:?}" , token_set);
         unsafe {
             TAILWIND_MEDIA_LAYOUT_TOKEN.push(token_set);
         }
@@ -386,39 +391,33 @@ fn in_range_media_query(a_range: &f32, income_val: &f32) -> bool {
     if lower_val == 1f32 {
         lower_val = 0f32;
     } else if lower_val != 0f32 {
-        lower_val -= 2f32;
+        lower_val -= 0.2f32;
     }
-    upper_val += 2f32;
-    return (income_val >= &lower_val) && (income_val <= &upper_val);
+    upper_val += 0.2f32;
+    return (income_val > &lower_val) && (income_val <= &upper_val);
 }
 pub fn search_media(name: &str, value: &f32) -> Vec<String> {
     let mut token: Vec<String> = Vec::new();
     unsafe {
         for media_set in &TAILWIND_MEDIA_LAYOUT_TOKEN {
-            // println!("in view :  {}, ", serde_json::to_string(media_set).unwrap());
             if name.to_lowercase() == "min-width" && media_set.min_width.is_some() {
-                let value_length = media_set.min_width.to_owned().unwrap();
-                if let Length::Value(d) = value_length {
+                if let Length::Value(d) = media_set.min_width.to_owned().unwrap() {
                     let (ss, _) = d.to_unit_value();
                     if in_range_media_query(&ss, value) {
-                        // println!( "{} ,  {}, ", name, serde_json::to_string(media_set).unwrap() );
-                        // println!("in min-width : {}", ss);
                         token.push(media_set.token_name.to_owned());
                     }
                 }
             } else if name.to_lowercase() == "max-width" && media_set.max_width.is_some() {
-                let value_length = media_set.max_width.to_owned().unwrap();
-                if let Length::Value(d) = value_length {
+                if let Length::Value(d) = media_set.max_width.to_owned().unwrap() {
                     let (ss, _) = d.to_unit_value();
                     if in_range_media_query(&ss, value) {
-                        // println!( "{} ,  {}, ", name, serde_json::to_string(media_set).unwrap() );
-                        // println!("in max-width : {}", ss);
                         token.push(media_set.token_name.to_owned());
                     }
                 }
             }
         }
     }
+    
     return token;
 }
 

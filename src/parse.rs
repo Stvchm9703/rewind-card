@@ -2,9 +2,9 @@ use crate::convert_token::resolve_style;
 use crate::resolve_token::resolve_media_query_prefix;
 use crate::tailwind_token::TailwindTokenSet;
 use lightningcss::{
-    rules::CssRule,
+    rules::{style::StyleRule, CssRule},
     stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
-    traits::ToCss, 
+    traits::ToCss,
     // properties::Property,
 };
 // use serde_json;
@@ -12,9 +12,7 @@ use lightningcss::{
 use grass;
 
 pub fn parse_scss_to_css(file_context: String) -> String {
-    if file_context.contains(r"(\/deep\/|\:\:v-deep)") {
-        // #Todo
-    }
+    if file_context.contains(r"(\/deep\/|\:\:v-deep)") {}
     let y = grass::from_string(file_context, &grass::Options::default());
     return y.unwrap_or_default();
 }
@@ -33,44 +31,24 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                 // p.query.
                 let mut mq_token: Vec<String> = vec![];
                 for q in m.query.media_queries {
+                    // println!(", {:?}", q);
                     let ext = resolve_media_query_prefix(q);
                     mq_token.extend_from_slice(&ext);
                 }
                 let sub_property_count = m.rules.0.len() as i32;
                 for p in m.rules.0 {
                     if let CssRule::Style(s) = p {
-                        let mut tw_set = TailwindTokenSet::new();
-                        tw_set.push_involved_classnames(
-                            s.selectors
-                                .to_string()
-                                .split(", ")
-                                .map(|f| f.to_owned())
-                                .collect(),
-                        );
-                        tw_set.set_layer_group(&current_layer);
-                        tw_set.set_raw_property(&current_rule);
-                        resolve_style(&s, &mut tw_set);
-                        tw_set.push_media_queries(&mq_token);
+                        let mut tw_set = create_new_tw_token(&s, &current_rule, &current_layer);
                         tw_set.set_raw_property_count(sub_property_count);
+                        tw_set.push_media_queries(&mq_token);
+
+                        // println!("{} part, ", tw_set.involved_classnames.join(" "),);
                         tw_vec.push(tw_set);
                     }
                 }
             }
             CssRule::Style(p) => {
-                let mut tw_set = TailwindTokenSet::new();
-                tw_set.push_involved_classnames(
-                    p.selectors
-                        .to_string()
-                        .split(", ")
-                        .map(|f| f.to_owned())
-                        .collect(),
-                );
-                tw_set.set_layer_group(&current_layer);
-                tw_set.set_raw_property(&current_rule);
-                let property_count = p.declarations.declarations.len() as i32;
-                tw_set.set_raw_property_count(property_count);
-                // let style_rule:Vec<Property> = p.declarations.declarations.iter().collect();
-                resolve_style(&p, &mut tw_set);
+                let tw_set = create_new_tw_token(&p, &current_rule, &current_layer);
 
                 tw_vec.push(tw_set);
             }
@@ -98,4 +76,22 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
 
     // println!("{}", serde_json::to_string_pretty(&tw_vec).unwrap());
     tw_vec
+}
+
+fn create_new_tw_token(p: &StyleRule, current_rule: &str, current_layer: &str) -> TailwindTokenSet {
+    let mut tw_set = TailwindTokenSet::new();
+    tw_set.push_involved_classnames(
+        p.selectors
+            .to_string()
+            .split(", ")
+            .map(|f| f.to_owned())
+            .collect(),
+    );
+    tw_set.set_layer_group(current_layer);
+    tw_set.set_raw_property(current_rule);
+    // let property_count = p.declarations.declarations.len() as i32;
+    tw_set.set_raw_property_count(p.declarations.declarations.len() as i32);
+    // let style_rule:Vec<Property> = p.declarations.declarations.iter().collect();
+    resolve_style(p, &mut tw_set);
+    tw_set
 }

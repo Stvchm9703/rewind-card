@@ -17,3 +17,5 @@ grass = "0.12.3"
 parcel_selectors = "0.25.1"
 lazy_static = "1.4.0"
 rayon = "1.5.3"
+
+itertools="0.10.5"

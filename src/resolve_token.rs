@@ -1,5 +1,6 @@
+use itertools::Itertools;
 use lightningcss::{
-    media_query::{MediaCondition, MediaFeature, MediaFeatureValue, MediaQuery},
+    media_query::{MediaCondition, MediaFeature, MediaFeatureValue, MediaQuery, Operator},
     properties::{
         border::BorderSideWidth,
         font::{AbsoluteFontSize, FontSize, LineHeight},
@@ -405,30 +406,72 @@ pub fn resolve_line_height_set(
 
 pub fn resolve_media_query_prefix(q: MediaQuery) -> Vec<String> {
     let mut temp: Vec<String> = vec![];
-    #[warn(unused_assignments)]
-    let mut resolve_name = String::new();
-    if let MediaCondition::Feature(ss) = q.condition.unwrap() {
-        if let MediaFeature::Plain { name, value } = ss {
-            resolve_name = name.to_string();
-            let mut rem_value = -1f32;
-            if let MediaFeatureValue::Length(qwe) = value {
-                if let lightningcss::values::length::Length::Value(v) = qwe {
-                    // let u = v.to_px();
-                    let (vv, unit) = v.to_unit_value();
-                    // println!("vv {} , unit {}", vv, unit);
-                    if unit.to_lowercase().contains("em") {
-                        rem_value = vv;
-                    } else {
-                        let u = v.to_px().unwrap_or_default();
-                        rem_value = (u / 16f32).round();
-                    }
+    
+    match q.condition.unwrap() {
+        MediaCondition::Feature(ss) => {
+            resolve_media_query_feat(ss, &mut temp);
+        }
+        MediaCondition::Operation {
+            operator: _,
+            conditions,
+        } => {
+            for cond in conditions {
+                if let MediaCondition::Feature(fsa) = cond {
+                    resolve_media_query_feat(fsa, &mut temp);
+                }
+            }
+        }
+        _ => (),
+    }
+    // return temp;
+
+    if temp.len() == 0 {
+        return temp;
+    }
+
+    let mut tem_2: Vec<String> = Vec::new();
+
+    if temp.iter().any(|t| t.starts_with("lt-"))
+        && temp.iter().any(|t| t.starts_with("gt-"))
+        && temp.iter().any(|t| t.starts_with("at-"))
+    {
+        tem_2 = temp
+            .iter()
+            .filter(|&t| t.starts_with("at-"))
+            .cloned()
+            .collect();
+    } else if temp.iter().any(|t| t.starts_with("gt-")) && temp.iter().any(|t| t.starts_with("at-"))
+    {
+        tem_2 = temp
+            .iter()
+            .filter(|&t| !t.starts_with("at-") && !t.starts_with("gt-"))
+            .cloned()
+            .collect();
+    }
+    tem_2.sort();
+    tem_2.dedup();
+    return tem_2;
+}
+
+fn resolve_media_query_feat(ss: MediaFeature, temp: &mut Vec<String>) {
+    if let MediaFeature::Plain { name, value } = ss {
+        let resolve_name = name.to_string();
+        let mut rem_value = -1f32;
+
+        if let MediaFeatureValue::Length(qwe) = value {
+            if let lightningcss::values::length::Length::Value(v) = qwe {
+                // let u = v.to_px();
+                let (vv, unit) = v.to_unit_value();
+                // println!("vv {} , unit {}", vv, unit);
+                if unit.to_lowercase().contains("em") {
+                    rem_value = vv;
+                } else {
+                    let u = v.to_px().unwrap_or_default();
+                    rem_value = (u / 16f32).round();
                 }
             }
             let yyy = search_media(&resolve_name, &rem_value);
             temp.extend_from_slice(&yyy);
         }
     }
-    // #todo : resolve the extra token
-
-    return temp;
 }
