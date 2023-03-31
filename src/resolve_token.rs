@@ -43,7 +43,9 @@ pub fn resolve_track_size(
                 tw_set.push_tailwind_token(token_prefix, "auto");
             }
         },
-        grid::TrackSize::MinMax { min, max } => resolve_raw_exp(income_value, tw_set, token_prefix),
+        grid::TrackSize::MinMax { min: _, max: _ } => {
+            resolve_raw_exp(income_value, tw_set, token_prefix)
+        }
         grid::TrackSize::FitContent(_) => {
             tw_set.push_tailwind_token(token_prefix, "[fit-content]");
         }
@@ -287,7 +289,7 @@ pub fn resolve_percentage_or_number(
 }
 
 pub fn resolve_time(income_value: &Time, tw_set: &mut TailwindTokenSet, token_prefix: &str) {
-    #[warn(unused_assignments)]
+    // #[warn(unused_assignments)]
     let mut time_set = 0f32;
     match *income_value {
         Time::Seconds(a) => {
@@ -298,7 +300,7 @@ pub fn resolve_time(income_value: &Time, tw_set: &mut TailwindTokenSet, token_pr
         }
     }
 
-    tw_set.push_tailwind_token(token_prefix, time_set.round());
+    tw_set.push_tailwind_token(token_prefix, time_set);
 }
 
 pub fn resolve_raw_exp<F: ToCss>(

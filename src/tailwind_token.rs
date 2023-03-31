@@ -68,7 +68,8 @@ impl TailwindTokenSet {
         // let mut existed: Option<usize> = None;
 
         if property_name != "" {
-            combind_token = property_name.to_owned() + "-" + &combind_token;
+            // combind_token = property_name.to_owned() + "-" + &combind_token;
+            combind_token = format!("{property_name}-{combind_token}");
             // existed = self
             //     .tailwind_token
             //     .iter()
@@ -91,7 +92,8 @@ impl TailwindTokenSet {
         let mut existed: Option<usize> = None;
 
         if property_name != "" {
-            combind_token = property_name.to_owned() + "-" + &combind_token;
+            // combind_token = property_name.to_owned() + "-" + &combind_token;
+            combind_token = format!("{property_name}-{combind_token}");
             existed = self
                 .tailwind_token
                 .iter()

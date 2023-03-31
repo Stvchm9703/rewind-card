@@ -13,7 +13,7 @@ csv = "1.1.6"
 regex = {version = "1.6.0", features=["std"]}
 
 num = "0.4.0"
-grass = "0.12.1"
-parcel_selectors = "0.25.0"
+grass = "0.12.3"
+parcel_selectors = "0.25.1"
 lazy_static = "1.4.0"
 rayon = "1.5.3"
