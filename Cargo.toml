@@ -6,16 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lightningcss = { version = "1.0.0-alpha.40", features = ["serde" , "browserslist"]}
-serde = "1.0.147"
-serde_json = "1.0.87"
-csv = "1.1.6"
-regex = {version = "1.6.0", features=["std"]}
+lightningcss = { version = "1.0.0-alpha.45", features = ["serde" , "browserslist"]}
+serde = "1.0.188"
+serde_json = "1.0.106"
+csv = "1.2.2"
+regex = {version = "1.9.5", features=["std"]}
 
 num = "0.4.0"
-grass = "0.12.3"
-parcel_selectors = "0.25.1"
+grass = "0.13.1"
+parcel_selectors = "0.26.1"
 lazy_static = "1.4.0"
 rayon = "1.5.3"
 
-itertools="0.10.5"
+itertools="0.11.0"

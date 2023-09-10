@@ -33,6 +33,7 @@ pub fn parse_to_tw_token(file_context: &str, layer: &str) -> Vec<TailwindTokenSe
                 for q in m.query.media_queries {
                     // println!(", {:?}", q);
                     let ext = resolve_media_query_prefix(q);
+                    // print!("{:#?} ", ext);
                     mq_token.extend_from_slice(&ext);
                 }
                 let sub_property_count = m.rules.0.len() as i32;

@@ -20,22 +20,23 @@ use lightningcss::{
 };
 // use regex::Regex;
 
-use crate::tailwind_token::{ TailwindTokenSet};
+use crate::{tailwind_token::{ TailwindTokenSet}};
 
 use crate::resolve_token::{
     resolve_track_size, 
-    resolve_length_length_percentage_or_auto,
+    resolve_length_unit,
     resolve_dimension,
     resolve_length_size,
     resolve_length_max_size,
     resolve_keyword,
     resolve_border_side_width,
     resolve_color,
-    resolve_percentage_or_number,
+    resolve_number_or_percentage,
     resolve_time,
     resolve_raw_exp,
     resolve_font_set,
     resolve_line_height_set,
+    resolve_font_weight
 };
 
 // lazy_static!{
@@ -169,42 +170,42 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                 resolve_keyword(p, tw_set, "");
             }
             Property::Top(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "top");
+                resolve_length_unit(&p, tw_set, "top");
             }
             Property::Bottom(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "bottom");
+                resolve_length_unit(&p, tw_set, "bottom");
             }
             Property::Left(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "left");
+                resolve_length_unit(&p, tw_set, "left");
             }
             Property::Right(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "right");
+                resolve_length_unit(&p, tw_set, "right");
             }
             Property::InsetBlockStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "top");
+                resolve_length_unit(&p, tw_set, "top");
             }
             Property::InsetBlockEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "bottom");
+                resolve_length_unit(&p, tw_set, "bottom");
             }
             Property::InsetInlineStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "left");
+                resolve_length_unit(&p, tw_set, "left");
             }
             Property::InsetInlineEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "right");
+                resolve_length_unit(&p, tw_set, "right");
             }
             Property::InsetBlock(p) => {
-                resolve_length_length_percentage_or_auto(&p.block_start, tw_set, "top");
-                resolve_length_length_percentage_or_auto(&p.block_end, tw_set, "bottom");
+                resolve_length_unit(&p.block_start, tw_set, "top");
+                resolve_length_unit(&p.block_end, tw_set, "bottom");
             }
             Property::InsetInline(p) => {
-                resolve_length_length_percentage_or_auto(&p.inline_start, tw_set, "left");
-                resolve_length_length_percentage_or_auto(&p.inline_end, tw_set, "right");
+                resolve_length_unit(&p.inline_start, tw_set, "left");
+                resolve_length_unit(&p.inline_end, tw_set, "right");
             }
             Property::Inset(p) => {
-                resolve_length_length_percentage_or_auto(&p.top, tw_set, "top");
-                resolve_length_length_percentage_or_auto(&p.left, tw_set, "left");
-                resolve_length_length_percentage_or_auto(&p.bottom, tw_set, "bottom");
-                resolve_length_length_percentage_or_auto(&p.right, tw_set, "right");
+                resolve_length_unit(&p.top, tw_set, "top");
+                resolve_length_unit(&p.left, tw_set, "left");
+                resolve_length_unit(&p.bottom, tw_set, "bottom");
+                resolve_length_unit(&p.right, tw_set, "right");
             }
 
             // Property::BorderSpacing(_) => todo!(),
@@ -372,10 +373,10 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             Property::FlexGrow(p, _) => tw_set.push_tailwind_token("grow", p),
             Property::FlexShrink(p, _) => tw_set.push_tailwind_token("shrink", p),
             Property::FlexBasis(p, _) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "basis")
+                resolve_length_unit(&p, tw_set, "basis")
             }
             Property::Flex(p, _) => {
-                resolve_length_length_percentage_or_auto(&p.basis, tw_set, "basis");
+                resolve_length_unit(&p.basis, tw_set, "basis");
                 tw_set.push_tailwind_token("shrink", &p.shrink);
                 tw_set.push_tailwind_token("grow", &p.grow);
             }
@@ -571,189 +572,154 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                     s => resolve_raw_exp(s, tw_set, "col-end"),
                 }
             }
-            Property::MarginTop(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "mt"),
-            Property::MarginBottom(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "mb"),
-            Property::MarginLeft(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "ml"),
-            Property::MarginRight(p) => resolve_length_length_percentage_or_auto(&p, tw_set, "mr"),
+            Property::MarginTop(p) => resolve_length_unit(&p, tw_set, "mt"),
+            Property::MarginBottom(p) => resolve_length_unit(&p, tw_set, "mb"),
+            Property::MarginLeft(p) => resolve_length_unit(&p, tw_set, "ml"),
+            Property::MarginRight(p) => resolve_length_unit(&p, tw_set, "mr"),
             Property::MarginBlockStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "mt");
+                resolve_length_unit(&p, tw_set, "mt");
             }
             Property::MarginBlockEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "mb");
+                resolve_length_unit(&p, tw_set, "mb");
             }
             Property::MarginInlineStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "ml");
+                resolve_length_unit(&p, tw_set, "ml");
             }
             Property::MarginInlineEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "mr");
+                resolve_length_unit(&p, tw_set, "mr");
             }
             Property::MarginBlock(p) => {
-                resolve_length_length_percentage_or_auto(&p.block_start, tw_set, "mt");
-                resolve_length_length_percentage_or_auto(&p.block_end, tw_set, "mb");
+                resolve_length_unit(&p.block_start, tw_set, "mt");
+                resolve_length_unit(&p.block_end, tw_set, "mb");
             }
             Property::MarginInline(p) => {
-                resolve_length_length_percentage_or_auto(&p.inline_start, tw_set, "ml");
-                resolve_length_length_percentage_or_auto(&p.inline_end, tw_set, "mr");
+                resolve_length_unit(&p.inline_start, tw_set, "ml");
+                resolve_length_unit(&p.inline_end, tw_set, "mr");
             }
             Property::Margin(p) => {
-                resolve_length_length_percentage_or_auto(&p.top, tw_set, "mt");
-                resolve_length_length_percentage_or_auto(&p.left, tw_set, "ml");
-                resolve_length_length_percentage_or_auto(&p.bottom, tw_set, "mb");
-                resolve_length_length_percentage_or_auto(&p.right, tw_set, "mr");
+                resolve_length_unit(&p.top, tw_set, "mt");
+                resolve_length_unit(&p.left, tw_set, "ml");
+                resolve_length_unit(&p.bottom, tw_set, "mb");
+                resolve_length_unit(&p.right, tw_set, "mr");
             }
             Property::PaddingTop(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pt");
+                resolve_length_unit(&p, tw_set, "pt");
             }
             Property::PaddingBottom(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pb");
+                resolve_length_unit(&p, tw_set, "pb");
             }
             Property::PaddingLeft(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pl");
+                resolve_length_unit(&p, tw_set, "pl");
             }
             Property::PaddingRight(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pr");
+                resolve_length_unit(&p, tw_set, "pr");
             }
             Property::PaddingBlockStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pt");
+                resolve_length_unit(&p, tw_set, "pt");
             }
             Property::PaddingBlockEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pb");
+                resolve_length_unit(&p, tw_set, "pb");
             }
             Property::PaddingInlineStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pl");
+                resolve_length_unit(&p, tw_set, "pl");
             }
             Property::PaddingInlineEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "pr");
+                resolve_length_unit(&p, tw_set, "pr");
             }
             Property::PaddingBlock(p) => {
-                resolve_length_length_percentage_or_auto(&p.block_start, tw_set, "pt");
-                resolve_length_length_percentage_or_auto(&p.block_end, tw_set, "pb");
+                resolve_length_unit(&p.block_start, tw_set, "pt");
+                resolve_length_unit(&p.block_end, tw_set, "pb");
             }
             Property::PaddingInline(p) => {
-                resolve_length_length_percentage_or_auto(&p.inline_start, tw_set, "pl");
-                resolve_length_length_percentage_or_auto(&p.inline_end, tw_set, "pr");
+                resolve_length_unit(&p.inline_start, tw_set, "pl");
+                resolve_length_unit(&p.inline_end, tw_set, "pr");
             }
             Property::Padding(p) => {
-                resolve_length_length_percentage_or_auto(&p.top, tw_set, "pt");
-                resolve_length_length_percentage_or_auto(&p.left, tw_set, "pl");
-                resolve_length_length_percentage_or_auto(&p.bottom, tw_set, "pb");
-                resolve_length_length_percentage_or_auto(&p.right, tw_set, "pr");
+                resolve_length_unit(&p.top, tw_set, "pt");
+                resolve_length_unit(&p.left, tw_set, "pl");
+                resolve_length_unit(&p.bottom, tw_set, "pb");
+                resolve_length_unit(&p.right, tw_set, "pr");
             }
 
             Property::ScrollMarginTop(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mt");
+                resolve_length_unit(&p, tw_set, "scroll-mt");
             }
             Property::ScrollMarginBottom(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mb");
+                resolve_length_unit(&p, tw_set, "scroll-mb");
             }
             Property::ScrollMarginLeft(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-ml");
+                resolve_length_unit(&p, tw_set, "scroll-ml");
             }
             Property::ScrollMarginRight(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mr");
+                resolve_length_unit(&p, tw_set, "scroll-mr");
             }
             Property::ScrollMarginBlockStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mt");
+                resolve_length_unit(&p, tw_set, "scroll-mt");
             }
             Property::ScrollMarginBlockEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mb");
+                resolve_length_unit(&p, tw_set, "scroll-mb");
             }
             Property::ScrollMarginInlineStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-ml");
+                resolve_length_unit(&p, tw_set, "scroll-ml");
             }
             Property::ScrollMarginInlineEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-mr");
+                resolve_length_unit(&p, tw_set, "scroll-mr");
             }
             Property::ScrollMarginBlock(p) => {
-                resolve_length_length_percentage_or_auto(&p.block_start, tw_set, "scroll-mt");
-                resolve_length_length_percentage_or_auto(&p.block_end, tw_set, "scroll-mb");
+                resolve_length_unit(&p.block_start, tw_set, "scroll-mt");
+                resolve_length_unit(&p.block_end, tw_set, "scroll-mb");
             }
             Property::ScrollMarginInline(p) => {
-                resolve_length_length_percentage_or_auto(&p.inline_start, tw_set, "scroll-ml");
-                resolve_length_length_percentage_or_auto(&p.inline_end, tw_set, "scroll-mr");
+                resolve_length_unit(&p.inline_start, tw_set, "scroll-ml");
+                resolve_length_unit(&p.inline_end, tw_set, "scroll-mr");
             }
             Property::ScrollMargin(p) => {
-                resolve_length_length_percentage_or_auto(&p.top, tw_set, "scroll-mt");
-                resolve_length_length_percentage_or_auto(&p.left, tw_set, "scroll-ml");
-                resolve_length_length_percentage_or_auto(&p.bottom, tw_set, "scroll-mb");
-                resolve_length_length_percentage_or_auto(&p.right, tw_set, "scroll-mr");
+                resolve_length_unit(&p.top, tw_set, "scroll-mt");
+                resolve_length_unit(&p.left, tw_set, "scroll-ml");
+                resolve_length_unit(&p.bottom, tw_set, "scroll-mb");
+                resolve_length_unit(&p.right, tw_set, "scroll-mr");
             }
             Property::ScrollPaddingTop(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pt");
+                resolve_length_unit(&p, tw_set, "scroll-pt");
             }
             Property::ScrollPaddingBottom(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pb");
+                resolve_length_unit(&p, tw_set, "scroll-pb");
             }
             Property::ScrollPaddingLeft(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pl");
+                resolve_length_unit(&p, tw_set, "scroll-pl");
             }
             Property::ScrollPaddingRight(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pr");
+                resolve_length_unit(&p, tw_set, "scroll-pr");
             }
             Property::ScrollPaddingBlockStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pt");
+                resolve_length_unit(&p, tw_set, "scroll-pt");
             }
             Property::ScrollPaddingBlockEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pb");
+                resolve_length_unit(&p, tw_set, "scroll-pb");
             }
             Property::ScrollPaddingInlineStart(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pl");
+                resolve_length_unit(&p, tw_set, "scroll-pl");
             }
             Property::ScrollPaddingInlineEnd(p) => {
-                resolve_length_length_percentage_or_auto(&p, tw_set, "scroll-pr");
+                resolve_length_unit(&p, tw_set, "scroll-pr");
             }
             Property::ScrollPaddingBlock(p) => {
-                resolve_length_length_percentage_or_auto(&p.block_start, tw_set, "scroll-pt");
-                resolve_length_length_percentage_or_auto(&p.block_end, tw_set, "scroll-pb");
+                resolve_length_unit(&p.block_start, tw_set, "scroll-pt");
+                resolve_length_unit(&p.block_end, tw_set, "scroll-pb");
             }
             Property::ScrollPaddingInline(p) => {
-                resolve_length_length_percentage_or_auto(&p.inline_start, tw_set, "scroll-pl");
-                resolve_length_length_percentage_or_auto(&p.inline_end, tw_set, "scroll-pr");
+                resolve_length_unit(&p.inline_start, tw_set, "scroll-pl");
+                resolve_length_unit(&p.inline_end, tw_set, "scroll-pr");
             }
             Property::ScrollPadding(p) => {
-                resolve_length_length_percentage_or_auto(&p.top, tw_set, "scroll-pt");
-                resolve_length_length_percentage_or_auto(&p.left, tw_set, "scroll-pl");
-                resolve_length_length_percentage_or_auto(&p.bottom, tw_set, "scroll-pb");
-                resolve_length_length_percentage_or_auto(&p.right, tw_set, "scroll-pr");
+                resolve_length_unit(&p.top, tw_set, "scroll-pt");
+                resolve_length_unit(&p.left, tw_set, "scroll-pl");
+                resolve_length_unit(&p.bottom, tw_set, "scroll-pb");
+                resolve_length_unit(&p.right, tw_set, "scroll-pr");
             }
 
-            Property::FontWeight(p) => {
-                match p {
-                    font::FontWeight::Absolute(a) => match a {
-                        font::AbsoluteFontWeight::Weight(k) => {
-                            if k <= &200f32 {
-                                tw_set.push_tailwind_token("font", "extralight");
-                            } else if k <= &300f32 {
-                                tw_set.push_tailwind_token("font", "light");
-                            } else if k <= &400f32 {
-                                tw_set.push_tailwind_token("font", "normal");
-                            } else if k <= &500f32 {
-                                tw_set.push_tailwind_token("font", "medium");
-                            } else if k <= &600f32 {
-                                tw_set.push_tailwind_token("font", "semibold");
-                            } else if k <= &700f32 {
-                                tw_set.push_tailwind_token("font", "bold");
-                            } else {
-                                tw_set.push_tailwind_token("font", "extrabold");
-                            }
-                        }
-                        font::AbsoluteFontWeight::Normal => {
-                            tw_set.push_tailwind_token("font", "normal")
-                        }
-                        font::AbsoluteFontWeight::Bold => {
-                            tw_set.push_tailwind_token("font", "bold")
-                        }
-                    },
-                    font::FontWeight::Bolder => {
-                        tw_set.push_tailwind_token("font", "medium")
-                    }
-                    font::FontWeight::Lighter => {
-                        tw_set.push_tailwind_token("font", "light");
-                    }
-                }
-                // resolve_keyword(p, tw_set, "font")
-            }
-            Property::FontSize(p) => resolve_font_set(p , tw_set, ""),
+            Property::FontWeight(p) => resolve_font_weight(p, tw_set),
+            Property::FontSize(p) => resolve_font_set(p , tw_set),
             // Property::FontStretch(_) => todo!(),
             // Property::FontFamily(_) => {},
             Property::FontStyle(p) => match p {
@@ -762,8 +728,23 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
             },
             // Property::FontVariantCaps(_) => todo!(),
             Property::LineHeight(p) => resolve_line_height_set(p , tw_set,"leading"),
-            // Property::Font(_) => todo!(),
-            // Property::VerticalAlign(_) => todo!(),
+            Property::Font(p) => {
+                resolve_font_set(&p.size , tw_set);
+                // resolve_font_set(&p.weight , tw_set, "");
+                resolve_font_weight(&p.weight, tw_set);
+                // resolve_font_set(&p.stretch , tw_set, "");
+
+                // resolve_font_set(&p.style , tw_set, "");
+                // for resolve font-style
+                match &p.style {
+                    font::FontStyle::Normal => {}
+                    _ => resolve_keyword(&p.style, tw_set, "font"),
+                }
+                // resolve_font_set(&p.variant_caps , tw_set, "");
+                resolve_line_height_set(&p.line_height , tw_set, "leading");
+                // resolve_font_set(&p.family , tw_set, "");
+            },
+            Property::VerticalAlign(p) => resolve_keyword(p, tw_set, "v"),
             // Property::FontPalette(_) => todo!(),
 
             Property::TransitionProperty(p, _) => {
@@ -980,23 +961,23 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             resolve_keyword(&z, tw_set, "translate-z");
                         },
                         transform::Transform::Scale(x, y) => {
-                            resolve_percentage_or_number(&x, tw_set, "scale-x");
-                            resolve_percentage_or_number(&y, tw_set, "scale-y");
+                            resolve_number_or_percentage(&x, tw_set, "scale-x");
+                            resolve_number_or_percentage(&y, tw_set, "scale-y");
                         },
                         transform::Transform::ScaleX(x) => {
-                            resolve_percentage_or_number(&x, tw_set, "scale-x");
+                            resolve_number_or_percentage(&x, tw_set, "scale-x");
                         },
                         transform::Transform::ScaleY(y) => {
-                            resolve_percentage_or_number(&y, tw_set, "scale-y");
+                            resolve_number_or_percentage(&y, tw_set, "scale-y");
                         },
                         transform::Transform::ScaleZ(z) => {
-                            resolve_percentage_or_number(&z, tw_set, "scale-z");
+                            resolve_number_or_percentage(&z, tw_set, "scale-z");
 
                         },
                         transform::Transform::Scale3d(x, y, z) => {
-                            resolve_percentage_or_number(&x, tw_set, "scale-x");
-                            resolve_percentage_or_number(&y, tw_set, "scale-y");
-                            resolve_percentage_or_number(&z, tw_set, "scale-z");
+                            resolve_number_or_percentage(&x, tw_set, "scale-x");
+                            resolve_number_or_percentage(&y, tw_set, "scale-y");
+                            resolve_number_or_percentage(&z, tw_set, "scale-z");
                         },
                         transform::Transform::Rotate(x) => {
                             tw_set.push_tailwind_token("rotate", x.to_degrees());
@@ -1178,24 +1159,24 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                             // effects::Filter::Url(_) => {},
                             Filter::Blur(p) => resolve_keyword(p, tw_set, "filter-blur"),
                             Filter::Brightness(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-brightness")
+                                resolve_number_or_percentage(p, tw_set, "filter-brightness")
                             }
                             Filter::Contrast(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-contrast")
+                                resolve_number_or_percentage(p, tw_set, "filter-contrast")
                             }
                             Filter::Grayscale(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-grayscale")
+                                resolve_number_or_percentage(p, tw_set, "filter-grayscale")
                             }
                             Filter::HueRotate(p) => resolve_keyword(p, tw_set, "filter-hue-rotate"),
                             Filter::Invert(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-invert")
+                                resolve_number_or_percentage(p, tw_set, "filter-invert")
                             }
                             // Filter::Opacity(_) => resolve_keyword(p, tw_set, "filter-blur"),
                             Filter::Saturate(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-saturate")
+                                resolve_number_or_percentage(p, tw_set, "filter-saturate")
                             }
                             Filter::Sepia(p) => {
-                                resolve_percentage_or_number(p, tw_set, "filter-sepia")
+                                resolve_number_or_percentage(p, tw_set, "filter-sepia")
                             }
                             Filter::DropShadow(p) => {
                                 resolve_keyword(p, tw_set, "filter-drop-shadow")
@@ -1215,29 +1196,29 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
                         match aaa {
                             // effects::Filter::Url(_) => {},
                             Filter::Blur(p) => resolve_keyword(p, tw_set, "backdrop-filter-blur"),
-                            Filter::Brightness(p) => resolve_percentage_or_number(
+                            Filter::Brightness(p) => resolve_number_or_percentage(
                                 p,
                                 tw_set,
                                 "backdrop-filter-brightness",
                             ),
                             Filter::Contrast(p) => {
-                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-contrast")
+                                resolve_number_or_percentage(p, tw_set, "backdrop-filter-contrast")
                             }
                             Filter::Grayscale(p) => {
-                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-grayscale")
+                                resolve_number_or_percentage(p, tw_set, "backdrop-filter-grayscale")
                             }
                             Filter::HueRotate(p) => {
                                 resolve_keyword(p, tw_set, "backdrop-filter-hue-rotate")
                             }
                             Filter::Invert(p) => {
-                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-invert")
+                                resolve_number_or_percentage(p, tw_set, "backdrop-filter-invert")
                             }
                             // Filter::Opacity(_) => resolve_keyword(p, tw_set, "backdrop-filter-blur"),
                             Filter::Saturate(p) => {
-                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-saturate")
+                                resolve_number_or_percentage(p, tw_set, "backdrop-filter-saturate")
                             }
                             Filter::Sepia(p) => {
-                                resolve_percentage_or_number(p, tw_set, "backdrop-filter-sepia")
+                                resolve_number_or_percentage(p, tw_set, "backdrop-filter-sepia")
                             }
                             Filter::DropShadow(p) => {
                                 resolve_keyword(p, tw_set, "backdrop-filter-drop-shadow")
@@ -1264,6 +1245,5 @@ pub fn resolve_style(rule: &StyleRule, tw_set: &mut TailwindTokenSet) {
         
     }
 }
-
 
 

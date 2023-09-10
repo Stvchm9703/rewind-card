@@ -5,7 +5,7 @@ pub mod tailwind_token;
 
 // use serde_json;
 use crate::parse::parse_to_tw_token;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 // use serde_json::{Result, Value};
 use std::{
     // collections::HashMap,
@@ -31,7 +31,7 @@ fn main() {
         .map(|e| e.path())
         .collect::<Vec<_>>();
 
-    file_list.par_iter().for_each(|entry| {
+    file_list.into_iter().for_each(|entry| {
         let file_name = entry.file_name().unwrap_or_default();
         let file_context = fs::read_to_string(&entry).unwrap();
 

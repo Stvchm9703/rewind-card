@@ -2,6 +2,7 @@
 use csv;
 use lazy_static::lazy_static;
 use lightningcss::{
+    media_query::MediaFeatureComparison,
     // media_query::{MediaCondition, MediaFeature, MediaQuery},
     properties::font::{FontSize, LineHeight},
     stylesheet::ParserOptions,
@@ -224,7 +225,7 @@ pub fn init() {
                 // let rgb_set = color_token_set.color_set.to_rgb();
                 if let CssColor::RGBA(_) = p {
                     let rgb_set = p.to_rgb();
-                    if let CssColor::RGBA(pp) = rgb_set {
+                    if let Ok(CssColor::RGBA(pp)) = rgb_set {
                         color_token_set.color_set_red = pp.red;
                         color_token_set.color_set_green = pp.green;
                         color_token_set.color_set_blue = pp.blue;
@@ -284,7 +285,7 @@ pub fn init() {
         let re = Regex::new(r"(?P<number_value>[\d|.]+)(?P<unit>\w+)$").unwrap();
 
         let mut min_width_value = Length::Value(LengthValue::Rem(0f32));
-       
+
         if &token_set.min_width_string != "" {
             let ssss = re.captures(&token_set.min_width_string).unwrap();
             let num = ssss
@@ -400,6 +401,7 @@ pub fn search_media(name: &str, value: &f32) -> Vec<String> {
     let mut token: Vec<String> = Vec::new();
     unsafe {
         for media_set in &TAILWIND_MEDIA_LAYOUT_TOKEN {
+            println!("{}", media_set.token_name);
             if name.to_lowercase() == "min-width" && media_set.min_width.is_some() {
                 if let Length::Value(d) = media_set.min_width.to_owned().unwrap() {
                     let (ss, _) = d.to_unit_value();
@@ -417,7 +419,37 @@ pub fn search_media(name: &str, value: &f32) -> Vec<String> {
             }
         }
     }
-    
+
+    return token;
+}
+
+pub fn search_media_v2(operator: &MediaFeatureComparison, value: &f32) -> Vec<String> {
+    let mut token: Vec<String> = Vec::new();
+    unsafe {
+        for media_set in &TAILWIND_MEDIA_LAYOUT_TOKEN {
+            if (operator == &MediaFeatureComparison::GreaterThan
+                || operator == &MediaFeatureComparison::GreaterThanEqual)
+                && media_set.min_width.is_some()
+            {
+                if let Length::Value(d) = media_set.min_width.to_owned().unwrap() {
+                    let (ss, _) = d.to_unit_value();
+                    if in_range_media_query(&ss, value) {
+                        token.push(media_set.token_name.to_owned());
+                    }
+                }
+            } else if (operator == &MediaFeatureComparison::LessThan
+                || operator == &MediaFeatureComparison::LessThanEqual)
+                && media_set.max_width.is_some()
+            {
+                if let Length::Value(d) = media_set.max_width.to_owned().unwrap() {
+                    let (ss, _) = d.to_unit_value();
+                    if in_range_media_query(&ss, value) {
+                        token.push(media_set.token_name.to_owned());
+                    }
+                }
+            }
+        }
+    }
     return token;
 }
 
